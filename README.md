@@ -1,2 +1,10 @@
-# tracker
-Tracker for your habits with gamification
+# Create tracker with gamification. 
+
+### stack
+backend:
+- Go(net/http)
+- PostgreSQL
+- Docker/docker-compose
+
+frontend:
+- soon...
