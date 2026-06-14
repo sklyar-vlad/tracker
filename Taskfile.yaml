@@ -1,13 +1,26 @@
 version: '3'
 
 tasks:
+  build:
+    desc: rebuild service 
+    cmds:
+      - docker build -t self-dev .
+    silent: true
+
   run:
     desc: start service
     cmds:
-      - go run backend/cmd/api/main.go
+      - docker run --rm -d --name=self-dev-backend --network=self-dev -p=8080:8080 self-dev:latest
     silent: true
+
+  stop:
+    desc: stop service
+    cmds:
+      - docker stop self-dev-backend
+    silent: true
+
   fmt:
     desc: formatting project
     cmds:
       - golangci-lint fmt
-    silent: true
+    silent: true      
