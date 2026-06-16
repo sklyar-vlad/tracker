@@ -1,0 +1,42 @@
+services:
+  backend:
+    image: self-dev-backend
+    container_name: self-dev-backend
+    networks:
+      - self-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    image: self-dev-frontend
+    container_name: self-dev-frontend
+    networks:
+      - self-dev    
+    ports:
+      - "5173:5173"
+
+  db:
+    image: postgres:18-alpine
+    container_name: self-dev-db
+    networks:
+      - self-dev
+    environment:
+      POSTGRES_DB: self-dev
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - "self-dev:/var/lib/postgresql" 
+      
+volumes:
+  self-dev:
+
+networks:
+  self-dev:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

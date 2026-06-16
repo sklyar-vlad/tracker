@@ -6,7 +6,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o self-dev ./backend/cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o self-dev ./cmd/api
 
 # -- RUN STAGE --
 FROM golang:1.26-alpine 
