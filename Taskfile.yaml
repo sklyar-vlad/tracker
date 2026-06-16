@@ -2,24 +2,26 @@ version: '3'
 
 tasks:
 
-  run-backend:
-    desc: start service
+  build-backend:
+    desc: build backend side
     cmds:
       - cd backend && docker build -t self-dev-backend .
-      - docker run --rm -d --name=self-dev-backend --network=self-dev -p=8080:8080 self-dev-backend
-    silent: true
-  
-  run-frontend:
-    desc: start frontend
+
+  build-frontend:
+    desc: build frontend side
     cmds:
       - cd frontend && docker build -t self-dev-frontend .
-      - docker run --rm -d --name=self-dev-frontend --network=self-dev -p=5173:5173 self-dev-frontend
+
+  run:
+    desc: start service
+    cmds:
+      - docker-compose up -d
+    silent: true
 
   stop:
     desc: stop service
     cmds:
-      - docker stop self-dev-backend
-      - docker stop self-dev-frontend
+      - docker-compose down
     silent: true
 
   fmt:

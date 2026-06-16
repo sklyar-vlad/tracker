@@ -1,16 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 func habitHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello from /habit")
 }
-
 
 func main() {
 	mux := http.NewServeMux()

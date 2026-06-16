@@ -33,6 +33,7 @@ services:
       
 volumes:
   self-dev:
+    name: "self-dev-volume"
 
 networks:
   self-dev:
