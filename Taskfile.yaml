@@ -38,7 +38,7 @@ tasks:
   migration:
     desc: create new migration file. example "task migration NAME=name_of_migration"
     cmds:
-      - goose -s create {{.NAME}} sql
+      - goose -s create {{.NAME}} sql -dir backend/migrations
     vars:
       NAME: '{{.NAME | default "migration"}}'
 

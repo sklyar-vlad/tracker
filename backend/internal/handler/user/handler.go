@@ -14,6 +14,7 @@ import (
 
 type Service interface {
 	Register(ctx context.Context, username, email, password string) (model.User, error)
+	Auth(ctx context.Context, username, email, password string) (string, string, error)
 }
 
 type handler struct {
@@ -38,7 +39,7 @@ func NewHandler(service Service, logger *zap.Logger) *handler {
 //	@Failure		500		{string}	string
 //	@Router			/register [post]
 func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
-	var input dto.CreateUserRequest
+	var input dto.UserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		h.logger.Error("decode request failed", zap.Error(err))
@@ -70,5 +71,42 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(dto.ToUserResponse(user)); err != nil {
 		h.logger.Error("failed create response with user model", zap.String("email", user.Email), zap.Error(err))
+	}
+}
+
+func (h *handler) Auth(w http.ResponseWriter, r *http.Request) {
+	var input dto.UserRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		h.logger.Error("decode request failed", zap.Error(err))
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	if input.Email == "" {
+		h.logger.Error("invalid email address", zap.Error(errors.ErrInvalidEmail))
+		http.Error(w, errors.ErrInvalidEmail.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(input.Password) < 6 {
+		h.logger.Error("invalid password, it should be more than 6 symbols", zap.Error(errors.ErrInvalidPassword))
+		http.Error(w, errors.ErrInvalidPassword.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	access_token, refresh_token, err := h.service.Auth(r.Context(), input.Username, input.Email, input.Password)
+
+	if err != nil {
+		h.logger.Error("failed authorization", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err = json.NewEncoder(w).Encode(dto.ToAuthResponse(access_token, refresh_token)); err != nil {
+		h.logger.Error("failed create response with user model", zap.Error(err))
 	}
 }

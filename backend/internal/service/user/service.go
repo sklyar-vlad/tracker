@@ -3,15 +3,21 @@ package user
 import (
 	"context"
 	"errors"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/google/uuid"
+	customErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/model"
 )
 
 type Repository interface {
-	Create(ctx context.Context, user model.User) (model.User, error)
+	Register(ctx context.Context, user model.User) (model.User, error)
+	Auth(ctx context.Context, user model.User) error
+	GetRefreshToken(ctx context.Context, user model.User) (model.RefreshToken, error)
+	GetUserByEmail(ctx context.Context, email string) (model.User, error)
 }
 
 type Service struct {
@@ -37,5 +43,71 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 	}
 
 	s.logger.Info("success created model user", zap.String("email", user.Email))
-	return s.repo.Create(ctx, user)
+	return s.repo.Register(ctx, user)
+}
+
+func (s *Service) Login(ctx context.Context, username, email, password string) (string, string, error) {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	
+	if errors.Is(err, customErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		return "", "", customErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		s.logger.Error("failed select user")
+		return "", "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	
+	if err != nil {
+		s.logger.Info("incorrect password or email", zap.Error(customErrors.ErrUnauthorized))
+		return "", "", customErrors.ErrInvalidPassword
+	}
+
+	
+
+	s.logger.Info("success authorizated", zap.String("email", user.Email))
+	return 
+}
+
+func (s *Service) Auth(ctx context.Context, username, email, password string) (string, string, error) {
+
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	
+	if errors.Is(err, customErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		return "", "", customErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		s.logger.Error("failed select user")
+		return "", "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	
+	if err != nil {
+		s.logger.Info("incorrect password or email", zap.Error(customErrors.ErrUnauthorized))
+		return "", "", customErrors.ErrInvalidPassword
+	}
+
+	refreshToken, err := s.repo.GetRefreshToken(ctx, user)
+
+	if errors.Is(err, customErrors.ErrTokenWasExpired) {
+		refreshToken = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		s.repo.CreateRefreshToken(ctx, user.User_id)
+	}
+
+	if err != nil {
+		s.logger.Error("failed select refresh token")
+		return "", "", err
+	}
+
+	// accessToken :=
+
+
+	s.logger.Info("success authorizated", zap.String("email", user.Email))
+	return access_token, refreshToken.TokenHash, nil
 }
