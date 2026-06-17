@@ -12,13 +12,7 @@
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
           <label for="email">Email Address</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-          />
+          <input id="email" v-model="email" type="email" placeholder="you@example.com" required />
         </div>
 
         <div class="form-group">
@@ -39,9 +33,7 @@
         <span>Don't have an account?</span>
       </div>
 
-      <RouterLink to="/register" class="btn btn-secondary btn-full">
-        Create Account
-      </RouterLink>
+      <RouterLink to="/register" class="btn btn-secondary btn-full"> Create Account </RouterLink>
     </div>
 
     <div class="auth-decoration"></div>
@@ -49,20 +41,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useToast } from 'vue-toastification'
 import Header from '@/components/HeaderAuth.vue'
 
 const router = useRouter()
+const route = useRoute()
+const toast = useToast()
+
 const email = ref('')
 const password = ref('')
 
+onMounted(() => {
+  if (route.query.registered === 'true') {
+    toast.success('Account created successfully!')
+  }
+})
+
 const handleLogin = async () => {
   if (email.value && password.value) {
-    console.log('Login attempt:', { email: email.value, password: password.value })
+    console.log('Login attempt:', {
+      email: email.value,
+      password: password.value,
+    })
+
     // TODO: Connect to backend API
+
     email.value = ''
     password.value = ''
+
     await router.push('/')
   }
 }

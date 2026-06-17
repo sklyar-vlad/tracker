@@ -24,7 +24,6 @@ func (r *repository) Create(ctx context.Context, user model.User) (model.User, e
 	`
 
 	_, err := r.pool.Exec(ctx, query, user.Role, user.Username, user.Email, user.Password)
-
 	if err != nil {
 		return model.User{}, err
 	}

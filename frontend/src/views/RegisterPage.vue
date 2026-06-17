@@ -1,7 +1,7 @@
 <template>
   <div class="main-layout">
     <Header />
-  </div>    
+  </div>
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-header">
@@ -12,13 +12,7 @@
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
           <label for="name">Username</label>
-          <input
-            id="name"
-            v-model="username"
-            type="text"
-            placeholder="Piter Parker"
-            required
-          />
+          <input id="name" v-model="username" type="text" placeholder="Piter Parker" required />
         </div>
 
         <div class="form-group">
@@ -65,9 +59,7 @@
         <span>Already have an account?</span>
       </div>
 
-      <RouterLink to="/login" class="btn btn-secondary btn-full">
-        Sign In
-      </RouterLink>
+      <RouterLink to="/login" class="btn btn-secondary btn-full"> Sign In </RouterLink>
     </div>
 
     <div class="auth-decoration"></div>
@@ -77,9 +69,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toastification'
 import Header from '@/components/HeaderAuth.vue'
 
 const router = useRouter()
+const toast = useToast()
+
 const username = ref('')
 const email = ref('')
 const password = ref('')
@@ -89,50 +84,48 @@ const passwordError = computed(() => {
   if (password.value && confirmPassword.value && password.value !== confirmPassword.value) {
     return 'Passwords do not match'
   }
+
   return ''
 })
 
 const handleRegister = async () => {
-  if (username.value && email.value && password.value && confirmPassword.value) {
-    if (passwordError.value) {
-      return
-    }
-    console.log('Register attempt:', {
-      username: username.value,
-      email: email.value,
-      password: password.value,
+  if (!username.value || !email.value || !password.value || !confirmPassword.value) {
+    return
+  }
+
+  if (passwordError.value) {
+    toast.error(passwordError.value)
+    return
+  }
+
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username.value,
+        email: email.value,
+        password: password.value,
+      }),
     })
 
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: username.value,
-          email: email.value,
-          password: password.value,
-        }),
-      })
-
-      if (!res.ok) {
-        const errText = await res.text()
-        throw new Error(errText)
-      }
-
-      const data = await res.json()
-      console.log('Registered user:', data)
-
-
-      username.value = ''
-      email.value = ''
-      password.value = ''
-      confirmPassword.value = ''
-      await router.push('/api/login')
-    } catch (err) {
-      console.error('Register error: ', err)
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(errText || 'Registration failed')
     }
+
+    router.push({
+      path: '/login',
+      query: {
+        registered: 'true',
+      },
+    })
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'Registration failed')
+
+    console.error('Register error:', err)
   }
 }
 </script>
@@ -290,6 +283,16 @@ const handleRegister = async () => {
   margin-bottom: 20px;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.success-message {
+  padding: 12px 16px;
+  background: #eefbf0;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px;
+  color: #2d6a4f;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 @media (max-width: 640px) {

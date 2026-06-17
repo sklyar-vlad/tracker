@@ -25,12 +25,12 @@ func NewService(repo Repository) *Service {
 func (s *Service) Register(ctx context.Context, username, email, password string) (model.User, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return model.User{}, errors.New("Invalid generate hash of password")
+		return model.User{}, errors.New("invalid generate hash of password")
 	}
 
 	user, err := model.NewUser(username, email, string(passwordHash))
 	if err != nil {
-		return model.User{}, errors.New("Invalid create user")
+		return model.User{}, errors.New("invalid create user")
 	}
 
 	return s.repo.Create(ctx, user)
