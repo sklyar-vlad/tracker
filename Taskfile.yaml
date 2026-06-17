@@ -36,7 +36,7 @@ tasks:
       - cd frontend && npx prettier . --write
 
   migration:
-    desc: create new migration file
+    desc: create new migration file. example "task migration NAME=name_of_migration"
     cmds:
       - goose -s create {{.NAME}} sql
     vars:
