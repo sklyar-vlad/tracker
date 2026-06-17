@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 
 	"github.com/sklyar-vlad/selfDev/database"
@@ -19,8 +20,19 @@ import (
 	userSrv "github.com/sklyar-vlad/selfDev/internal/service/user"
 	"github.com/sklyar-vlad/selfDev/logger"
 	"github.com/sklyar-vlad/selfDev/middleware"
+	_ "github.com/sklyar-vlad/selfDev/swagger"
 )
 
+//	@title			Swagger SelfDev API
+//	@version		1.0
+//	@description	This is a server of self-dev tracker.
+
+//	@contact.name	API Support
+//	@contact.url	t.me/sklyarvlad
+//	@contact.email	sklyarvladislavtl@gmail.com
+
+// @host		localhost:8080
+// @BasePath	/api
 func main() {
 	logger, err := logger.NewLogger()
 	if err != nil {
@@ -48,6 +60,7 @@ func main() {
 	userHandler := user.NewHandler(userService, logger)
 
 	mux := http.NewServeMux()
+	mux.Handle("GET /api/swagger/", httpSwagger.WrapHandler)
 	handler.RegisterRoutes(mux, userHandler)
 	wrapped := middleware.CORS(mux)
 
