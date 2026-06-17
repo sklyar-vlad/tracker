@@ -88,18 +88,6 @@ const handleLogin = async () => {
   padding: 20px;
 }
 
-.auth-decoration {
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  border-radius: 50%;
-  opacity: 0.1;
-  top: -100px;
-  right: -100px;
-  pointer-events: none;
-}
-
 .auth-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
