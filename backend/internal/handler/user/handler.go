@@ -26,16 +26,17 @@ func NewHandler(service Service, logger *zap.Logger) *handler {
 }
 
 // Register godoc
-// @Summary Register new user
-// @Description Creates a new user account
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateUserRequest true "User data"
-// @Success 201 {object} dto.UserResponse
-// @Failure 400 {string} string
-// @Failure 500 {string} string
-// @Router /register [post]
+//
+//	@Summary		Register new user
+//	@Description	Creates a new user account
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.CreateUserRequest	true	"User data"
+//	@Success		201		{object}	dto.UserResponse
+//	@Failure		400		{string}	string
+//	@Failure		500		{string}	string
+//	@Router			/register [post]
 func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	var input dto.CreateUserRequest
 
