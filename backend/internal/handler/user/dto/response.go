@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/google/uuid"
+
 	"github.com/sklyar-vlad/selfDev/internal/model"
 )
 

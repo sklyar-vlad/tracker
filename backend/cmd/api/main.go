@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
+
 	"github.com/sklyar-vlad/selfDev/database"
 	"github.com/sklyar-vlad/selfDev/internal/handler"
 	"github.com/sklyar-vlad/selfDev/internal/handler/user"
@@ -17,7 +19,6 @@ import (
 	userSrv "github.com/sklyar-vlad/selfDev/internal/service/user"
 	"github.com/sklyar-vlad/selfDev/logger"
 	"github.com/sklyar-vlad/selfDev/middleware"
-	"go.uber.org/zap"
 )
 
 func main() {

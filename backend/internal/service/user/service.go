@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/sklyar-vlad/selfDev/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/sklyar-vlad/selfDev/internal/model"
 )
 
 type Repository interface {

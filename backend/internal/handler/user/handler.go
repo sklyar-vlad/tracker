@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/handler/user/dto"
 	"github.com/sklyar-vlad/selfDev/internal/model"
-	"go.uber.org/zap"
 )
 
 type Service interface {

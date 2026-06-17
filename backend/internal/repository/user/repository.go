@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sklyar-vlad/selfDev/internal/model"
 	"go.uber.org/zap"
+
+	"github.com/sklyar-vlad/selfDev/internal/model"
 )
 
 type repository struct {
