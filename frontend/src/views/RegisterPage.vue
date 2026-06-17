@@ -11,10 +11,10 @@
 
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
-          <label for="name">Full Name</label>
+          <label for="name">Username</label>
           <input
             id="name"
-            v-model="fullName"
+            v-model="username"
             type="text"
             placeholder="Piter Parker"
             required
@@ -80,7 +80,7 @@ import { useRouter } from 'vue-router'
 import Header from '@/components/HeaderAuth.vue'
 
 const router = useRouter()
-const fullName = ref('')
+const username = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -93,21 +93,46 @@ const passwordError = computed(() => {
 })
 
 const handleRegister = async () => {
-  if (fullName.value && email.value && password.value && confirmPassword.value) {
+  if (username.value && email.value && password.value && confirmPassword.value) {
     if (passwordError.value) {
       return
     }
     console.log('Register attempt:', {
-      fullName: fullName.value,
+      username: username.value,
       email: email.value,
       password: password.value,
     })
-    // TODO: Connect to backend API
-    fullName.value = ''
-    email.value = ''
-    password.value = ''
-    confirmPassword.value = ''
-    await router.push('/login')
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.value,
+          email: email.value,
+          password: password.value,
+        }),
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(errText)
+      }
+
+      const data = await res.json()
+      console.log('Registered user:', data)
+
+
+      username.value = ''
+      email.value = ''
+      password.value = ''
+      confirmPassword.value = ''
+      await router.push('/api/login')
+    } catch (err) {
+      console.error('Register error: ', err)
+    }
   }
 }
 </script>
