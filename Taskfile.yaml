@@ -16,6 +16,11 @@ tasks:
     cmds:
       - docker build -t self-dev-frontend -f infra/Dockerfile.frontend .
 
+  dev-frontend:
+    desc: up only frontend side of project and develope in real time
+    cmds:
+      - cd frontend && npm run dev
+
   up:
     desc: start service
     cmds:
