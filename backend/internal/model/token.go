@@ -8,7 +8,7 @@ import (
 
 type RefreshToken struct {
 	TokenHash string
-	User_id  uuid.UUID
+	User_id   uuid.UUID
 	CreatedAt time.Time
 	ExpiresAt time.Time
 }

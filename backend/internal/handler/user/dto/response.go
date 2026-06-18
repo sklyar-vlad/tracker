@@ -13,7 +13,7 @@ type UserResponse struct {
 }
 
 type AuthResponse struct {
-	Access_token string `json:"access_token"`
+	Access_token  string `json:"access_token"`
 	Refresh_token string `json:"refresh_token"`
 }
 
@@ -28,8 +28,8 @@ func ToUserResponse(p model.User) UserResponse {
 }
 
 func ToAuthResponse(access_token, refresh_token string) AuthResponse {
-	resp := AuthResponse {
-		Access_token: access_token,
+	resp := AuthResponse{
+		Access_token:  access_token,
 		Refresh_token: refresh_token,
 	}
 

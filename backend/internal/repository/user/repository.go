@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
-	"github.com/google/uuid"
 
 	customErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/model"
@@ -67,7 +67,6 @@ func (r *repository) GetRefreshToken(ctx context.Context, user model.User) (mode
 		r.logger.Error("failed get user by user_id", zap.Error(err))
 		return model.RefreshToken{}, err
 	}
-
 
 	r.logger.Info("success select refresh token", zap.String("email", user.Email))
 

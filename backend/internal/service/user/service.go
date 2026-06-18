@@ -48,7 +48,7 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 
 func (s *Service) Login(ctx context.Context, username, email, password string) (string, string, error) {
 	user, err := s.repo.GetUserByEmail(ctx, email)
-	
+
 	if errors.Is(err, customErrors.ErrUserNotFound) {
 		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
 		return "", "", customErrors.ErrUserNotFound
@@ -60,24 +60,22 @@ func (s *Service) Login(ctx context.Context, username, email, password string) (
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	
+
 	if err != nil {
 		s.logger.Info("incorrect password or email", zap.Error(customErrors.ErrUnauthorized))
 		return "", "", customErrors.ErrInvalidPassword
 	}
 
-	
-
 	s.logger.Info("success authorizated", zap.String("email", user.Email))
-	return 
+	return
 }
 
 func (s *Service) Auth(ctx context.Context, username, email, password string) (string, string, error) {
 
 	user, err := s.repo.GetUserByEmail(ctx, email)
-	
+
 	if errors.Is(err, customErrors.ErrUserNotFound) {
-		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		s.logger.Error("user not found", zap.Error(custors.ErrUserNotFound))
 		return "", "", customErrors.ErrUserNotFound
 	}
 
@@ -87,7 +85,7 @@ func (s *Service) Auth(ctx context.Context, username, email, password string) (s
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	
+
 	if err != nil {
 		s.logger.Info("incorrect password or email", zap.Error(customErrors.ErrUnauthorized))
 		return "", "", customErrors.ErrInvalidPassword
@@ -106,7 +104,6 @@ func (s *Service) Auth(ctx context.Context, username, email, password string) (s
 	}
 
 	// accessToken :=
-
 
 	s.logger.Info("success authorizated", zap.String("email", user.Email))
 	return access_token, refreshToken.TokenHash, nil
