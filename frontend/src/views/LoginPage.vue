@@ -55,23 +55,37 @@ const password = ref('')
 
 onMounted(() => {
   if (route.query.registered === 'true') {
-    toast.success('Account created successfully!')
+    toast.success('Login successfully!')
   }
 })
 
 const handleLogin = async () => {
-  if (email.value && password.value) {
-    console.log('Login attempt:', {
-      email: email.value,
-      password: password.value,
+  try {
+    const res = await fetch('http://localhost:8080/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value,
+      }),
     })
 
-    // TODO: Connect to backend API
+    if (!res.ok) {
+      throw new Error(await res.text())
+    }
+
+    toast.success('Login successful')
 
     email.value = ''
     password.value = ''
 
     await router.push('/')
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'Login failed')
+    console.error(err)
   }
 }
 </script>

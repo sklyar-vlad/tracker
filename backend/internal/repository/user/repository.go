@@ -2,10 +2,14 @@ package user
 
 import (
 	"context"
+	"errors"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
+	customErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/model"
 )
 
@@ -21,7 +25,7 @@ func NewRepository(pool *pgxpool.Pool, logger *zap.Logger) *repository {
 	}
 }
 
-func (r *repository) Create(ctx context.Context, user model.User) (model.User, error) {
+func (r *repository) Register(ctx context.Context, user model.User) (model.User, error) {
 	query := `
 	INSERT INTO users (role, username, email, password)
 	VALUES ($1, $2, $3,	$4)
@@ -35,4 +39,86 @@ func (r *repository) Create(ctx context.Context, user model.User) (model.User, e
 
 	r.logger.Info("success insert user in database", zap.String("email", user.Email))
 	return user, nil
+}
+
+func (r *repository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
+	query := `
+	SELECT user_id, role, username, email, password
+	FROM users
+	WHERE email = $1
+	`
+
+	var user model.User
+
+	err := r.pool.QueryRow(ctx, query, email).Scan(
+		&user.UserId,
+		&user.Role,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		return model.User{}, customErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		r.logger.Error("failed get user by email", zap.Error(err))
+		return model.User{}, err
+	}
+
+	r.logger.Info("success select user by email", zap.String("email", user.Email))
+	return user, nil
+}
+
+func (r *repository) CreateRefreshToken(
+	ctx context.Context,
+	refreshToken model.RefreshToken,
+) (model.RefreshToken, error) {
+	query := `
+	INSERT INTO refresh_tokens (token_hash, user_id, expires_at)
+	VAlUES ($1, $2, $3)	
+	`
+
+	_, err := r.pool.Exec(ctx, query, refreshToken.TokenHash, refreshToken.UserId, refreshToken.ExpiresAt)
+	if err != nil {
+		r.logger.Error("invalid insert refresh token into database", zap.Error(err))
+		return model.RefreshToken{}, err
+	}
+
+	r.logger.Info("success insert refresh token in database", zap.String("user_id", refreshToken.UserId.String()))
+	return refreshToken, nil
+}
+
+func (r *repository) GetRefreshToken(ctx context.Context, userId uuid.UUID) (model.RefreshToken, error) {
+	query := `
+	SELECT token_hash, user_id, expires_at
+	FROM refresh_tokens
+	WHERE user_id = $1
+	ORDER BY created_at DESC
+	LIMIT 1
+	`
+
+	var refreshToken model.RefreshToken
+
+	err := r.pool.QueryRow(ctx, query, userId).Scan(
+		&refreshToken.TokenHash,
+		&refreshToken.UserId,
+		&refreshToken.ExpiresAt,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		return model.RefreshToken{}, customErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		r.logger.Error("failed get refresh token by user id", zap.Error(err))
+		return model.RefreshToken{}, err
+	}
+
+	r.logger.Info("success select token by user_id", zap.String("user_id", refreshToken.UserId.String()))
+
+	return refreshToken, nil
 }
