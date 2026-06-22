@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -90,33 +91,34 @@ func (r *repository) CreateRefreshToken(
 	return refreshToken, nil
 }
 
-// func (r *repository) GetRefreshToken(ctx context.Context, user model.User) (model.RefreshToken, error) {
-// 	query := `
-// 	SELECT user_id, token_hash, created_at, expires_at
-// 	FROM refresh_tokens
-// 	WHERE user_id = $1 and expires_at > NOW();
-// 	`
+func (r *repository) GetRefreshToken(ctx context.Context, userId uuid.UUID) (model.RefreshToken, error) {
+	query := `
+	SELECT token_hash, user_id, expires_at
+	FROM refresh_tokens
+	WHERE user_id = $1
+	ORDER BY created_at DESC
+	LIMIT 1
+	`
 
-// 	var refreshToken model.RefreshToken
+	var refreshToken model.RefreshToken
 
-// 	err := r.pool.QueryRow(ctx, query, user.User_id).Scan(
-// 		&refreshToken.User_id,
-// 		&refreshToken.TokenHash,
-// 		&refreshToken.CreatedAt,
-// 		&refreshToken.ExpiresAt,
-// 	)
+	err := r.pool.QueryRow(ctx, query, userId).Scan(
+		&refreshToken.TokenHash,
+		&refreshToken.UserId,
+		&refreshToken.ExpiresAt,
+	)
 
-// 	if errors.Is(err, pgx.ErrNoRows) {
-// 		r.logger.Error("refresh token was expired", zap.Error(customErrors.ErrTokenWasExpired))
-// 		return model.RefreshToken{}, customErrors.ErrTokenWasExpired
-// 	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
+		return model.RefreshToken{}, customErrors.ErrUserNotFound
+	}
 
-// 	if err != nil {
-// 		r.logger.Error("failed get user by user_id", zap.Error(err))
-// 		return model.RefreshToken{}, err
-// 	}
+	if err != nil {
+		r.logger.Error("failed get refresh token by user id", zap.Error(err))
+		return model.RefreshToken{}, err
+	}
 
-// 	r.logger.Info("success select refresh token", zap.String("email", user.Email))
+	r.logger.Info("success select token by user_id", zap.String("user_id", refreshToken.UserId.String()))
 
-// 	return refreshToken, nil
-// }
+	return refreshToken, nil
+}

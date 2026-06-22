@@ -15,7 +15,7 @@ import (
 type Service interface {
 	Register(ctx context.Context, username, email, password string) (model.User, error)
 	Login(ctx context.Context, username, email, password string) (string, string, error)
-	// Refresh(ctx context.Context, accessToken string) (string, error)
+	Refresh(ctx context.Context, accessToken, refreshToken string) (string, error)
 }
 
 type handler struct {
@@ -90,7 +90,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	access_token, _, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
+	accessToken, refreshToken, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
 	if err != nil {
 		h.logger.Error("failed authorization", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -99,13 +99,54 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
-		Value:    access_token,
+		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   12 * 60 * 60,
 	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   30 * 24 * 60 * 60,
+	})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var input dto.TokenRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		h.logger.Error("decode request failed", zap.Error(err))
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	h.logger.Info("access token", zap.String("access token", input.AccessToken))
+	accessToken, err := h.service.Refresh(r.Context(), input.AccessToken, input.RefreshToken)
+	if err != nil {
+		h.logger.Error("failed authorization", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   12 * 60 * 60,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
