@@ -7,7 +7,7 @@ import (
 )
 
 type UserResponse struct {
-	User_id  uuid.UUID `json:"user_id"`
+	UserId   uuid.UUID `json:"user_id"`
 	Email    string    `json:"email"`
 	Password string    `json:"password"`
 }
@@ -19,7 +19,7 @@ type AuthResponse struct {
 
 func ToUserResponse(p model.User) UserResponse {
 	resp := UserResponse{
-		User_id:  p.User_id,
+		UserId:   p.UserId,
 		Email:    p.Email,
 		Password: p.Password,
 	}
