@@ -1,6 +1,6 @@
 <template>
   <div class="main-layout">
-    <Header />
+    <LandingHeader />
   </div>
 
   <section class="hero">
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import Header from '@/components/HeaderAuth.vue'
+import LandingHeader from '@/components/Header/LandingHeader.vue'
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
   <div class="main-layout">
-    <Header />
+    <WelcomeHeader />
   </div>
   <div class="auth-container">
     <div class="auth-card">
@@ -70,7 +70,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import Header from '@/components/HeaderAuth.vue'
+import WelcomeHeader from '@/components/Header/WelcomeHeader.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -136,7 +136,6 @@ const handleRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
   position: relative;
   overflow: hidden;
   padding: 20px;
