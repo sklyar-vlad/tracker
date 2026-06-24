@@ -19,6 +19,7 @@ import (
 
 type UserService interface {
 	CreateUser(ctx context.Context, username, email, password string) (userModel.User, error)
+	GetByLogin(ctx context.Context, username, password string) (userModel.User, error)
 }
 
 type Repository interface {
@@ -85,53 +86,47 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 	return tokens, nil
 }
 
-// func (s *Service) Login(ctx context.Context, username, email, password string) (string, string, error) {
-// 	user, err := s.repo.GetUserByEmail(ctx, email)
+func (s *Service) Login(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
+	user, err := s.userService.GetByLogin(ctx, username, email)
 
-// 	if errors.Is(err, customErrors.ErrUserNotFound) {
-// 		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
-// 		return authModel.Tokens{}, authModel.Tokens{}, customErrors.ErrUserNotFound
-// 	}
+	if errors.Is(err, appErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(appErrors.ErrUserNotFound))
+		return authModel.Tokens{}, appErrors.ErrUserNotFound
+	}
 
-// 	if err != nil {
-// 		s.logger.Error("failed select user")
-// 		return authModel.Tokens{}, authModel.Tokens{}, err
-// 	}
+	if err != nil {
+		s.logger.Error("failed get user", zap.Error(err))
+		return authModel.Tokens{}, err
+	}
 
-// 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-// 	if err != nil {
-// 		s.logger.Info("incorrect password", zap.Error(customErrors.ErrUnauthorized))
-// 		return authModel.Tokens{}, authModel.Tokens{}, customErrors.ErrInvalidPassword
-// 	}
+	refreshTokenString, err := bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Error("failed hash generation", zap.Error(err))
+		return authModel.Tokens{}, fmt.Errorf("failed hash generation: %v", err)
+	}
 
-// 	var Tokens model.Tokens
-// 	TokensBytes := uuid.NewString()
-// 	TokensHash, err := bcrypt.GenerateFromPassword([]byte(TokensBytes), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		s.logger.Error("password hash generation failed", zap.String("email", email), zap.Error(err))
-// 		return authModel.Tokens{}, authModel.Tokens{}, errors.New("invalid generate hash of password")
-// 	}
+	accessTokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewClaims(user.UserId)).
+		SignedString([]byte(s.cfg.Secret))
+	if err != nil {
+		s.logger.Error("failed signed token", zap.Error(err))
+		return authModel.Tokens{}, fmt.Errorf("failed signed token: %v", err)
+	}
 
-// 	Tokens.TokenHash = string(TokensHash)
-// 	Tokens.ExpiresAt = time.Now().AddDate(0, 1, 0)
-// 	Tokens.UserId = user.UserId
+	var tokens authModel.Tokens
+	tokens.AccessToken = accessTokenString
+	tokens.RefreshToken = string(refreshTokenString)
+	tokens.ExpiresAt = time.Now().AddDate(0, 1, 0)
+	tokens.UserId = user.UserId
 
-// 	_, err = s.repo.CreateTokens(ctx, Tokens)
-// 	if err != nil {
-// 		s.logger.Error("failed create refresh token", zap.String("email", email), zap.Error(err))
-// 		return authModel.Tokens{}, authModel.Tokens{}, errors.New("invalid create refresh token")
-// 	}
+	err = s.repo.CreateRefreshToken(ctx, tokens)
+	if err != nil {
+		s.logger.Error("failed create refresh token", zap.Error(err))
+		return authModel.Tokens{}, fmt.Errorf("failed create refresh token: %v", err)
+	}
 
-// 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, model.NewClaims(user.UserId)).
-// 		SignedString([]byte("meow"))
-// 	if err != nil {
-// 		s.logger.Error("failed signed token", zap.String("email", email), zap.Error(err))
-// 		return authModel.Tokens{}, authModel.Tokens{}, errors.New("invalid generate jwt")
-// 	}
-
-// 	s.logger.Info("success login", zap.String("email", user.Email))
-// 	return accessToken, TokensBytes, nil
-// }
+	s.logger.Info("success login", zap.String("email", user.Email))
+	return tokens, nil
+}
 
 // func (s *Service) Refresh(ctx context.Context, accessToken, Tokens string) (string, error) {
 // 	token, err := jwt.ParseWithClaims(

@@ -13,7 +13,7 @@ import (
 
 type AuthService interface {
 	Register(ctx context.Context, username, email, password string) (model.Tokens, error)
-	// Login(ctx context.Context, login, password string) (string, string, error)
+	Login(ctx context.Context, username, email, password string) (model.Tokens, error)
 	// Logout(ctx context.Context, refreshToken string) error
 	// Refresh(ctx context.Context, accessToken, refreshToken string) (string, error)
 }
@@ -43,12 +43,68 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    tokens.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   12 * 60 * 60,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokens.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   30 * 24 * 60 * 60,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+}
 
-	if err = json.NewEncoder(w).Encode(dto.ToTokenResponse(tokens.AccessToken, tokens.RefreshToken)); err != nil {
-		h.logger.Error("failed create response with tokens", zap.String("email", input.Email), zap.Error(err))
+func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
+	var input dto.AuthRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		h.logger.Error("failed decode request", zap.Error(err))
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
 	}
+
+	tokens, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
+	if err != nil {
+		h.logger.Error("failed login", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    tokens.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   12 * 60 * 60,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokens.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   30 * 24 * 60 * 60,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 }
 
 // func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {

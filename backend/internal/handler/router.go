@@ -5,7 +5,7 @@ import (
 )
 
 type AuthHandler interface {
-	// Login(w http.ResponseWriter, r *http.Request)
+	Login(w http.ResponseWriter, r *http.Request)
 	// Logout(w http.ResponseWriter, r *http.Request)
 	Register(w http.ResponseWriter, r *http.Request)
 	// Refresh(w http.ResponseWriter, r *http.Request)
@@ -28,7 +28,7 @@ func RegisterRoutes(mux *http.ServeMux, userHandler UserHandler, authHandler Aut
 	// mux.HandleFunc("DELETE /api/users/{id}", userHandler.DeleteUser)
 
 	// Auth
-	// mux.HandleFunc("POST /api/login", authHandler.Login)
+	mux.HandleFunc("POST /api/login", authHandler.Login)
 	// mux.HandleFunc("POST /api/logout", authHandler.Logout)
 	mux.HandleFunc("POST /api/register", authHandler.Register)
 	// mux.HandleFunc("POST /api/refresh", authHandler.Refresh)
