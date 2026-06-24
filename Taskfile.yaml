@@ -1,31 +1,58 @@
-version: '3'
+version: "3"
 
 tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
 
   build-backend:
     desc: build backend side
     cmds:
-      - cd backend && docker build -t self-dev-backend .
+      - docker build -t self-dev-backend -f infra/Dockerfile.backend .
 
   build-frontend:
     desc: build frontend side
     cmds:
-      - cd frontend && docker build -t self-dev-frontend .
+      - docker build -t self-dev-frontend -f infra/Dockerfile.frontend .
 
-  run:
+  dev-frontend:
+    desc: up only frontend side of project and develope in real time
+    cmds:
+      - cd frontend && npm run dev
+
+  up:
     desc: start service
     cmds:
-      - docker-compose up -d
-    silent: true
+      - task build-backend
+      - task build-frontend
+      - docker-compose -f ./infra/docker-compose.yaml up -d
 
-  stop:
+  down:
     desc: stop service
     cmds:
-      - docker-compose down
-    silent: true
+      - docker-compose -f ./infra/docker-compose.yaml down
 
-  fmt:
+  lint:
     desc: formatting project
     cmds:
-      - golangci-lint fmt
-    silent: true      
+      - cd backend && go fmt ./...
+      - cd backend && golangci-lint run --fix
+      - cd frontend && npx prettier . --write
+
+  migration:
+    desc: create new migration file. example "task migration NAME=name_of_migration"
+    cmds:
+      - goose -s create {{.NAME}} sql -dir backend/migrations
+    vars:
+      NAME: '{{.NAME | default "migration"}}'
+
+  migrate:
+    desc: choose last version of migrations
+    cmds:
+      - goose up -env ./infra/.env
+
+  rollback:
+    desc: comeback to previous version of migrations
+    cmds:
+      - goose down -env ./infra/.env

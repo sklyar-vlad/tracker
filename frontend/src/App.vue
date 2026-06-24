@@ -1,27 +1,23 @@
 <template>
-  <div class="page">
-    <div class="card">
-      <h1>Hi, its my first site</h1>
-      <h2>I'm try to input this frontend in docker</h2>
-    </div>
+  <div class="app">
+    <RouterView />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 
-const count = ref<number>(0)
+const { initTheme } = useTheme()
+
+onMounted(() => {
+  initTheme()
+})
 </script>
 
 <style>
-.page {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--background);
-}
-.card {
-  color: #03451e;
+.app {
+  width: 100%;
+  height: 100%;
 }
 </style>

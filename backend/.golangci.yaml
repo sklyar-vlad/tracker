@@ -13,6 +13,14 @@ formatters:
     - swaggo
   # Formatters settings.
   settings:
+    gofumpt:
+      extra-rules: true
+    gci:
+      sections:
+        - Standard
+        - Default
+        - Prefix(github.com/sklyar-vlad/selfDev/)
+      no-inline-comments: false
     golines:
       max-len: 120
   exclusions:
