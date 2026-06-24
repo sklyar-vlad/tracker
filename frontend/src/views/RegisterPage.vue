@@ -11,41 +11,23 @@
 
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
+          <input id="name" v-model="username" type="text" required />
           <label for="name">Username</label>
-          <input id="name" v-model="username" type="text" placeholder="Piter Parker" required />
         </div>
 
         <div class="form-group">
+          <input id="email" v-model="email" type="email" required />
           <label for="email">Email Address</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="example@example.com"
-            required
-          />
         </div>
 
         <div class="form-group">
+          <input id="password" v-model="password" type="password" required />
           <label for="password">Password</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="Create a password"
-            required
-          />
         </div>
 
         <div class="form-group">
+          <input id="confirm-password" v-model="confirmPassword" type="password" required />
           <label for="confirm-password">Confirm Password</label>
-          <input
-            id="confirm-password"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="Confirm your password"
-            required
-          />
         </div>
 
         <div v-if="passwordError" class="error-message">
@@ -81,11 +63,9 @@ const password = ref('')
 const confirmPassword = ref('')
 
 const passwordError = computed(() => {
-  if (password.value && confirmPassword.value && password.value !== confirmPassword.value) {
-    return 'Passwords do not match'
-  }
+  if (!password.value || !confirmPassword.value) return ''
 
-  return ''
+  return password.value !== confirmPassword.value ? 'Passwords do not match' : ''
 })
 
 const handleRegister = async () => {
@@ -117,7 +97,7 @@ const handleRegister = async () => {
     }
 
     router.push({
-      path: '/login',
+      path: '/me/profile',
       query: {
         registered: 'true',
       },
@@ -131,224 +111,264 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
+/* =========================
+   LOGIN LAYOUT (HERO SYSTEM)
+========================= */
 .auth-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+
   position: relative;
   overflow: hidden;
-  padding: 20px;
+
+  padding: 120px 20px 60px;
 }
 
+/* glow background */
 .auth-container::before {
   content: '';
   position: absolute;
 
-  width: 700px;
-  height: 700px;
+  width: 600px;
+  height: 600px;
 
-  background: radial-gradient(circle, rgba(149, 162, 223, 0.18), transparent 60%);
+  background: radial-gradient(circle, rgba(149, 162, 223, 0.12), transparent 60%);
 
-  filter: blur(60px);
+  filter: blur(50px);
 
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+
+  z-index: 0;
+  pointer-events: none;
 }
 
+/* =========================
+   CARD
+========================= */
 .auth-card {
-  position: relative;
-  z-index: 1;
-
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
 
-  padding: 48px 40px;
-
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  border-radius: 18px;
-
-  box-shadow:
-    0 15px 60px rgba(0, 0, 0, 0.35),
-    0 0 30px rgba(149, 162, 223, 0.1);
-}
-
-/* HEADER */
-
-.auth-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.auth-header h1 {
-  font-size: 30px;
-  font-weight: 800;
-
-  color: var(--text-primary);
-
-  margin-bottom: 8px;
-
-  text-shadow: 0 0 10px rgba(149, 162, 223, 0.2);
-}
-
-.auth-header p {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-/* FORM */
-
-.auth-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 
-  margin-bottom: 28px;
+  padding: clamp(24px, 3vw, 40px);
+
+  background: var(--surface);
+
+  /* 🔥 MAIN FIX */
+  border: 1px solid var(--border-subtle);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-radius: 16px;
+
+  box-shadow: var(--shadow-md);
+
+  z-index: 2;
+}
+
+/* =========================
+   HEADER
+========================= */
+.auth-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.auth-header h1 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 800;
+
+  color: var(--accent-primary);
+
+  text-shadow:
+    0 0 10px rgba(149, 162, 223, 0.15),
+    0 0 25px rgba(59, 130, 246, 0.1);
+}
+
+.auth-header p {
+  font-size: clamp(13px, 1.2vw, 16px);
+  color: var(--text-secondary);
+}
+
+/* =========================
+   FORM
+========================= */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
+  position: relative;
 }
 
 .form-group input {
-  padding: 13px 15px;
+  width: 100%;
+  padding: 16px 14px;
 
-  border-radius: 10px;
+  background: var(--surface);
 
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  /* 🔥 FIX */
+  border: 1px solid var(--border-default);
 
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
 
   color: var(--text-primary);
+  font-size: 15px;
 
-  transition: 0.25s;
-}
+  outline: none;
 
-.form-group input::placeholder {
-  color: var(--text-tertiary);
+  transition: 0.25s ease;
 }
 
 .form-group input:focus {
-  outline: none;
-
   border-color: var(--accent-primary);
 
-  box-shadow:
-    0 0 0 3px rgba(100, 200, 255, 0.15),
-    0 0 25px rgba(149, 162, 223, 0.15);
+  box-shadow: 0 0 0 3px var(--border-glow);
 }
 
-/* ERROR */
+/* FLOAT LABEL */
+.form-group label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
 
-.error-message {
-  padding: 12px 16px;
+  transform: translateY(-50%);
 
-  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
 
-  background: rgba(255, 70, 70, 0.08);
+  pointer-events: none;
 
-  border: 1px solid rgba(255, 70, 70, 0.15);
+  transition: 0.2s ease;
+  padding: 0 6px;
+}
 
-  color: #ff8d8d;
+.form-group input:focus ~ label,
+.form-group input:valid ~ label {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
 
+  color: var(--bg-primary);
+
+  /* вместо hardcoded bg */
+  background: var(--accent-primary);
+
+  border-radius: 6px;
+}
+
+/* =========================
+   DIVIDER
+========================= */
+.auth-divider {
+  text-align: center;
   font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0;
 }
 
-/* BUTTONS */
-
+/* =========================
+   BUTTONS (SYSTEM UNIFIED)
+========================= */
 .btn {
-  padding: 13px 24px;
+  width: 100%;
 
+  padding: 12px 24px;
   border-radius: 10px;
 
   font-weight: 700;
-
   text-decoration: none;
 
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 
-  transition: 0.25s;
+  transition: 0.25s ease;
 
   font-family: 'Evolventa', sans-serif;
 }
 
+/* PRIMARY */
 .btn-primary {
-  border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-dark));
 
+  border: none;
   color: white;
 
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
-
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.25);
+  box-shadow:
+    0 10px 30px rgba(59, 130, 246, 0.25),
+    0 0 20px rgba(149, 162, 223, 0.15);
 }
 
 .btn-primary:hover {
   transform: translateY(-3px);
-
-  box-shadow:
-    0 15px 40px rgba(59, 130, 246, 0.35),
-    0 0 30px rgba(149, 162, 223, 0.2);
 }
 
+/* SECONDARY */
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-
+  background: var(--surface);
+  border: 1px solid var(--border-medium);
   color: var(--text-primary);
-
-  border: 1px solid rgba(255, 255, 255, 0.15);
-
-  backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
   transform: translateY(-3px);
 
-  border-color: var(--accent-primary);
+  border-color: var(--border-strong);
 
-  box-shadow: 0 0 25px rgba(149, 162, 223, 0.15);
+  box-shadow: 0 0 0 1px var(--border-glow);
 }
 
-.btn-full {
-  width: 100%;
-}
-
-/* DIVIDER */
-
-.auth-divider {
-  text-align: center;
-
-  color: var(--text-secondary);
+.error-message {
+  margin-top: 6px;
 
   font-size: 13px;
+  font-weight: 600;
 
-  margin-bottom: 20px;
+  color: var(--error);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  animation: errorIn 0.5s ease;
 }
 
-/* MOBILE */
+/* лёгкий вход */
+@keyframes errorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-@media (max-width: 640px) {
-  .auth-card {
-    padding: 32px 24px;
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 100px 16px 40px;
   }
 
-  .auth-header h1 {
-    font-size: 24px;
+  .auth-card {
+    padding: 22px 18px;
+  }
+
+  .auth-form {
+    width: 100%;
   }
 }
 </style>

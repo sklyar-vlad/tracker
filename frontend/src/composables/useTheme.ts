@@ -1,43 +1,26 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 export type ThemeType = 'light' | 'dark'
 
-const theme = ref<ThemeType>('light')
+const theme = ref<ThemeType>(
+  (localStorage.getItem('theme') as ThemeType) || 'dark'
+)
+
+const applyTheme = (value: ThemeType) => {
+  theme.value = value
+  localStorage.setItem('theme', value)
+  document.documentElement.setAttribute('data-theme', value)
+}
+
+applyTheme(theme.value)
 
 export function useTheme() {
-  const applyTheme = (value: ThemeType) => {
-    document.documentElement.setAttribute('data-theme', value)
-    localStorage.setItem('theme', value)
-  }
-
-  const initTheme = () => {
-    const stored = localStorage.getItem('theme') as ThemeType | null
-
-    if (stored === 'light' || stored === 'dark') {
-      theme.value = stored
-    } else {
-      theme.value = 'light'
-    }
-
-    applyTheme(theme.value)
-  }
-
   const toggleTheme = () => {
-    theme.value = theme.value === 'light' ? 'dark' : 'light'
+    applyTheme(theme.value === 'dark' ? 'light' : 'dark')
   }
-
-  const setTheme = (value: ThemeType) => {
-    theme.value = value
-  }
-
-  watch(theme, (newValue) => {
-    applyTheme(newValue)
-  })
 
   return {
     theme,
-    initTheme,
     toggleTheme,
-    setTheme,
   }
 }

@@ -1,53 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Hind+Madurai:wght@400;600;700&display=swap');
+
 /* =========================
-   LIGHT THEME (DEFAULT)
+   DESIGN TOKENS (LIGHT)
 ========================= */
 :root {
-  /* Background */
-  --bg-image: url('/LightWallpaper.jpg');
-
-  /* Background Colors (for UI surfaces) */
-  --bg-primary: #f5f5f5;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #f0f2f5;
-
-  /* Text */
-  --text-primary: #1a1a1a;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
-
-  /* Accent */
-  --accent-primary: #64c8ff;
-  --accent-primary-light: #a8e0ff;
-  --accent-primary-dark: #3aa8e8;
-  --accent-secondary: #6366f1;
-
-  /* Border & Shadow */
-  --border-color: #e0e0e0;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
-
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-
-  /* Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  /* Surface */
-  --surface: rgba(255, 255, 255, 0.08);
+  --success: #2dd4bf;
+  --error: #ff5c7a;
+  --warning: #fbbf24;
+  --info: #64c8ff;
 }
 
-/* =========================
-   DARK THEME
-========================= */
-[data-theme='dark'] {
+html[data-theme='light'] {
+  --bg-image: url('/LightWallpaper.jpg');
+
+  --bg-page: rgba(248, 240, 221, 0.2);
+
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f0f2f5;
+
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-border: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #5f677e;
+  --text-secondary: rgba(95, 103, 126, 0.7);
+  --text-tertiary: rgba(95, 103, 126, 0.5);
+
+  --accent-primary: #6c7bff;
+  --accent-light: #a5aeff;
+  --accent-dark: #4d5bff;
+  --accent-secondary: #6366f1;
+
+  --border-subtle: rgba(95, 103, 126, 0.12);
+  --border-default: rgba(95, 103, 126, 0.18);
+  --border-strong: rgba(95, 103, 126, 0.28);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+html[data-theme='dark'] {
   --bg-image: url('/DarkWallpaper.jpg');
 
   --bg-primary: #1a1a1a;
@@ -59,19 +56,21 @@
   --text-tertiary: #a0a0a0;
 
   --accent-primary: #64c8ff;
-  --accent-primary-light: #a8e0ff;
-  --accent-primary-dark: #3aa8e8;
-  --accent-secondary: #818cf8;
+  --accent-light: #a8e0ff;
+  --accent-dark: #3aa8e8;
+  --accent-secondary: #64c8ff;
 
-  --border-color: #3a3a3a;
+  --surface: rgba(0, 0, 0, 0.35);
+  --surface-border: rgba(255, 255, 255, 0.08);
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-
-  --surface: rgba(0, 0, 0, 0.35);
 }
-
 /* =========================
    RESET
 ========================= */
@@ -83,27 +82,16 @@
 
 html,
 body {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 
 /* =========================
-   BASE BODY
+   BASE
 ========================= */
-
-@font-face {
-  font-family: 'Evolventa';
-  src: url('/Evolventa-Bold.woff2') format('woff2');
-  font-weight: 400;
-}
-
 body {
-  font-family: 'Evolventa', sans-serif;
+  font-family: 'Hind Madurai', system-ui, sans-serif;
 
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  background: var(--bg-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -111,16 +99,31 @@ body {
   color: var(--text-primary);
 
   transition:
-    background 0.4s ease,
+    background-image 0.4s ease,
     color 0.3s ease;
 }
 
-/* =========================
-   APP ROOT
-========================= */
+html[data-theme='light'] body {
+  background-image: url('/LightWallpaper.jpg');
+}
+
+html[data-theme='dark'] body {
+  background-image: url('/DarkWallpaper.jpg');
+}
+
 #app {
   width: 100%;
   height: 100%;
+}
+
+/* =========================
+   TYPOGRAPHY HELPERS
+========================= */
+h1,
+h2,
+h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
 }
 
 /* =========================
@@ -145,14 +148,40 @@ body {
 }
 
 /* =========================
-   TEXT SELECTION
+   SELECTION
 ========================= */
 ::selection {
   background: var(--accent-primary);
   color: white;
 }
 
-::-moz-selection {
-  background: var(--accent-primary);
+/* =========================
+   TOASTS
+========================= */
+
+.Vue-Toastification__toast {
+  border-radius: 10px !important;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.Vue-Toastification__toast--error {
+  background: var(--error);
+  color: white;
+}
+
+.Vue-Toastification__toast--success {
+  background: var(--success);
+  color: white;
+}
+
+.Vue-Toastification__toast--warning {
+  background: var(--warning);
+  color: black;
+}
+
+.Vue-Toastification__toast--info {
+  background: var(--info);
   color: white;
 }
