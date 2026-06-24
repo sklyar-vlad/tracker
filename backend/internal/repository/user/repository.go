@@ -47,7 +47,7 @@ func (r *repository) Create(ctx context.Context, user model.User) (model.User, e
 
 func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, error) {
 	query := `
-	SELECT user_id, role, username, email
+	SELECT user_id, role, username, email, password
 	FROM users
 	WHERE email = $1 or username = $1
 	LIMIT 1
@@ -60,6 +60,7 @@ func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, 
 		&user.Role,
 		&user.Username,
 		&user.Email,
+		&user.Password,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {

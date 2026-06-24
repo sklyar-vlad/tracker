@@ -99,6 +99,10 @@ func (s *Service) Login(ctx context.Context, username, email, password string) (
 		return authModel.Tokens{}, err
 	}
 
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return authModel.Tokens{}, appErrors.ErrInvalidPassword
+	}
+
 	refreshTokenString, err := bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
 	if err != nil {
 		s.logger.Error("failed hash generation", zap.Error(err))
