@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
@@ -14,7 +15,8 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, user model.User) (model.User, error)
-	// GetByLogin(ctx context.Context, user model.User) (model.User, error)
+	GetByLogin(ctx context.Context, login string) (model.User, error)
+	GetById(ctx context.Context, userId uuid.UUID) (model.User, error)
 	// Update(ctx context.Context, user model.User) (model.User, error)
 	// Delete(ctx context.Context, user model.User) error
 }
@@ -53,4 +55,43 @@ func (s *Service) CreateUser(ctx context.Context, username, email, password stri
 	}
 
 	return s.repo.Create(ctx, user)
+}
+
+func (s *Service) GetByLogin(ctx context.Context, username, email string) (model.User, error) {
+	var login string
+	if email == "" {
+		login = username
+	} else {
+		login = email
+	}
+
+	user, err := s.repo.GetByLogin(ctx, login)
+
+	if errors.Is(err, appErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(err))
+		return model.User{}, appErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		s.logger.Error("failed get user", zap.String("email/username", login), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed get user: %v", err)
+	}
+
+	return user, nil
+}
+
+func (s *Service) GetById(ctx context.Context, userId uuid.UUID) (model.User, error) {
+	user, err := s.repo.GetById(ctx, userId)
+
+	if errors.Is(err, appErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(err))
+		return model.User{}, appErrors.ErrUserNotFound
+	}
+
+	if err != nil {
+		s.logger.Error("failed get user", zap.String("id", userId.String()), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed get user: %v", err)
+	}
+
+	return user, nil
 }

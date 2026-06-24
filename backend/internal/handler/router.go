@@ -13,17 +13,17 @@ type AuthHandler interface {
 
 type UserHandler interface {
 	// GetUsers(w http.ResponseWriter, r *http.Request)
-	// CreateUser(w http.ResponseWriter, r *http.Request)
-	// GetUser(w http.ResponseWriter, r *http.Request)
+	CreateUser(w http.ResponseWriter, r *http.Request)
+	GetUser(w http.ResponseWriter, r *http.Request)
 	// DeleteUser(w http.ResponseWriter, r *http.Request)
 	// UpdateUser(w http.ResponseWriter, r *http.Request)
 }
 
 func RegisterRoutes(mux *http.ServeMux, userHandler UserHandler, authHandler AuthHandler) {
 	// User
-	// mux.HandleFunc("POST /api/users", userHandler.CreateUser)
+	mux.HandleFunc("POST /api/users", userHandler.CreateUser)
 	// mux.HandleFunc("GET /api/users", userHandler.GetUsers)
-	// mux.HandleFunc("GET /api/users/{id}", userHandler.GetUser)
+	mux.HandleFunc("GET /api/users/{id}", userHandler.GetUser)
 	// mux.HandleFunc("PATCH /api/users/{id}", userHandler.UpdateUser)
 	// mux.HandleFunc("DELETE /api/users/{id}", userHandler.DeleteUser)
 

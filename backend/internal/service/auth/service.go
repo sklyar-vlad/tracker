@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/sklyar-vlad/selfDev/internal/config"
+	appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	authModel "github.com/sklyar-vlad/selfDev/internal/model/auth"
 	userModel "github.com/sklyar-vlad/selfDev/internal/model/user"
 )
@@ -38,7 +40,17 @@ func NewService(repo Repository, userService UserService, config config.ConfigJW
 
 func (s *Service) Register(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
 	user, err := s.userService.CreateUser(ctx, username, email, password)
-	s.logger.Info("User", zap.String("user: ", user.UserId.String()))
+
+	if errors.Is(err, appErrors.ErrEmailAlreadyExists) {
+		s.logger.Error("email already exists", zap.Error(err))
+		return authModel.Tokens{}, appErrors.ErrEmailAlreadyExists
+	}
+
+	if errors.Is(err, appErrors.ErrUsernameAlreadyExists) {
+		s.logger.Error("username is unvailable", zap.Error(err))
+		return authModel.Tokens{}, appErrors.ErrUsernameAlreadyExists
+	}
+
 	if err != nil {
 		s.logger.Error("failed create user", zap.Error(err))
 		return authModel.Tokens{}, fmt.Errorf("failed create user: %v", err)
@@ -63,7 +75,6 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 	tokens.ExpiresAt = time.Now().AddDate(0, 1, 0)
 	tokens.UserId = user.UserId
 
-	s.logger.Info("Token", zap.String("token userId: ", user.UserId.String()))
 	err = s.repo.CreateRefreshToken(ctx, tokens)
 	if err != nil {
 		s.logger.Error("failed create refresh token", zap.Error(err))

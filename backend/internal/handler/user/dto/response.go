@@ -8,15 +8,17 @@ import (
 
 type UserResponse struct {
 	UserId   uuid.UUID `json:"user_id"`
+	Role     string    `json:"role"`
+	Username string    `json:"username"`
 	Email    string    `json:"email"`
-	Password string    `json:"password"`
 }
 
 func ToUserResponse(p model.User) UserResponse {
 	resp := UserResponse{
 		UserId:   p.UserId,
+		Role:     p.Role,
+		Username: p.Username,
 		Email:    p.Email,
-		Password: p.Password,
 	}
 
 	return resp

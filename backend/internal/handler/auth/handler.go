@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	// appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/handler/auth/dto"
 	model "github.com/sklyar-vlad/selfDev/internal/model/auth"
 )
@@ -51,6 +50,28 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 		h.logger.Error("failed create response with tokens", zap.String("email", input.Email), zap.Error(err))
 	}
 }
+
+// func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
+// 	var input dto.LoginRequest
+
+// 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+// 		h.logger.Error("failed decode request", zap.Error(err))
+// 		http.Error(w, "invalid json", http.StatusBadRequest)
+// 	}
+
+// 	user, err := h.service.GetByLogin(r.Context(), input.Username, input.Email)
+// 	if err != nil {
+// 		h.logger.Error("failed get user", zap.Error(err))
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusCreated)
+
+// 	if err = json.NewEncoder(w).Encode(dto.ToUserResponse(user)); err != nil {
+// 		h.logger.Error("failed create response with user", zap.String("email", user.Email), zap.Error(err))
+// 	}
+// }
 
 // func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 // 	var input dto.UserRequest
