@@ -9,59 +9,55 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 
 	"github.com/sklyar-vlad/selfDev/database"
+	"github.com/sklyar-vlad/selfDev/internal/config"
 	"github.com/sklyar-vlad/selfDev/internal/handler"
-	"github.com/sklyar-vlad/selfDev/internal/handler/user"
+	authHand "github.com/sklyar-vlad/selfDev/internal/handler/auth"
+	userHand "github.com/sklyar-vlad/selfDev/internal/handler/user"
+	authRepo "github.com/sklyar-vlad/selfDev/internal/repository/auth"
 	userRepo "github.com/sklyar-vlad/selfDev/internal/repository/user"
+	authSrv "github.com/sklyar-vlad/selfDev/internal/service/auth"
 	userSrv "github.com/sklyar-vlad/selfDev/internal/service/user"
 	"github.com/sklyar-vlad/selfDev/logger"
 	"github.com/sklyar-vlad/selfDev/middleware"
-	_ "github.com/sklyar-vlad/selfDev/swagger"
 )
 
-//	@title			Swagger SelfDev API
-//	@version		1.0
-//	@description	This is a server of self-dev tracker.
-
-//	@contact.name	API Support
-//	@contact.url	t.me/sklyarvlad
-//	@contact.email	sklyarvladislavtl@gmail.com
-
-// @host		localhost:8080
-// @BasePath	/api
 func main() {
-	logger, err := logger.NewLogger()
+	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed create config: %v", err)
+	}
+
+	logger, err := logger.NewLogger(cfg.Logger)
+	if err != nil {
+		log.Fatal("failed create logger", zap.Error(err))
 	}
 
 	defer func() {
 		_ = logger.Sync()
 	}()
 
-	if err := godotenv.Load(); err != nil {
-		logger.Fatal("invalid load .env file:", zap.Error(err))
-	}
-
 	ctx := context.Background()
-	pool, err := database.NewPostgres(ctx, os.Getenv("DATABASE_URL"))
+	pool, err := database.NewPostgres(ctx, cfg.Database)
 	if err != nil {
-		logger.Fatal("invalid connect with database", zap.Error(err))
+		logger.Fatal("failed connect to the database", zap.Error(err))
 	}
 
 	defer pool.Close()
 
+	authRepository := authRepo.NewRepository(pool, logger)
 	userRepository := userRepo.NewRepository(pool, logger)
+
 	userService := userSrv.NewService(userRepository, logger)
-	userHandler := user.NewHandler(userService, logger)
+	authService := authSrv.NewService(authRepository, userService, cfg.JWT, logger)
+
+	authHandler := authHand.NewHandler(authService, logger)
+	userHandler := userHand.NewHandler(userService, logger)
 
 	mux := http.NewServeMux()
-	mux.Handle("GET /api/swagger/", httpSwagger.WrapHandler)
-	handler.RegisterRoutes(mux, userHandler)
+	handler.RegisterRoutes(mux, userHandler, authHandler)
 	wrapped := middleware.CORS(mux)
 
 	service := &http.Server{

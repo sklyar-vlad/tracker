@@ -3,22 +3,22 @@ package user
 import (
 	"context"
 	"errors"
-	"time"
+	"fmt"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	customErrors "github.com/sklyar-vlad/selfDev/internal/errors"
-	"github.com/sklyar-vlad/selfDev/internal/model"
+	appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
+	model "github.com/sklyar-vlad/selfDev/internal/model/user"
 )
 
 type Repository interface {
-	Register(ctx context.Context, user model.User) (model.User, error)
-	GetUserByEmail(ctx context.Context, email string) (model.User, error)
-	CreateRefreshToken(ctx context.Context, refreshToken model.RefreshToken) (model.RefreshToken, error)
-	GetRefreshToken(ctx context.Context, userId uuid.UUID) (model.RefreshToken, error)
+	Create(ctx context.Context, user model.User) (model.User, error)
+	GetByLogin(ctx context.Context, login string) (model.User, error)
+	GetById(ctx context.Context, userId uuid.UUID) (model.User, error)
+	// Update(ctx context.Context, user model.User) (model.User, error)
+	// Delete(ctx context.Context, user model.User) error
 }
 
 type Service struct {
@@ -30,113 +30,68 @@ func NewService(repo Repository, logger *zap.Logger) *Service {
 	return &Service{repo: repo, logger: logger}
 }
 
-func (s *Service) Register(ctx context.Context, username, email, password string) (model.User, error) {
+func (s *Service) CreateUser(ctx context.Context, username, email, password string) (model.User, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		s.logger.Error("password hash generation failed", zap.String("email", email), zap.Error(err))
-		return model.User{}, errors.New("invalid generate hash of password")
+		s.logger.Error("failed password hash generation", zap.String("email", email), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed password hash generation: %v", err)
 	}
 
 	user, err := model.NewUser(username, email, string(passwordHash))
-	if err != nil {
-		s.logger.Error("create model user failed", zap.String("email", email), zap.Error(err))
-		return model.User{}, errors.New("invalid create user")
+
+	if errors.Is(err, appErrors.ErrInvalidEmail) {
+		s.logger.Error("invalid email", zap.Error(err))
+		return model.User{}, appErrors.ErrInvalidEmail
 	}
 
-	s.logger.Info("success created model user", zap.String("email", user.Email))
-	return s.repo.Register(ctx, user)
+	if errors.Is(err, appErrors.ErrInvalidPassword) {
+		s.logger.Error("invalid password", zap.Error(err))
+		return model.User{}, appErrors.ErrInvalidPassword
+	}
+
+	if err != nil {
+		s.logger.Error("failed create user model", zap.String("email", email), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed create user model: %v", err)
+	}
+
+	return s.repo.Create(ctx, user)
 }
 
-func (s *Service) Login(ctx context.Context, username, email, password string) (string, string, error) {
-	user, err := s.repo.GetUserByEmail(ctx, email)
+func (s *Service) GetByLogin(ctx context.Context, username, email string) (model.User, error) {
+	var login string
+	if email == "" {
+		login = username
+	} else {
+		login = email
+	}
 
-	if errors.Is(err, customErrors.ErrUserNotFound) {
-		s.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
-		return "", "", customErrors.ErrUserNotFound
+	user, err := s.repo.GetByLogin(ctx, login)
+
+	if errors.Is(err, appErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(err))
+		return model.User{}, appErrors.ErrUserNotFound
 	}
 
 	if err != nil {
-		s.logger.Error("failed select user")
-		return "", "", err
+		s.logger.Error("failed get user", zap.String("email/username", login), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed get user: %v", err)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		s.logger.Info("incorrect password", zap.Error(customErrors.ErrUnauthorized))
-		return "", "", customErrors.ErrInvalidPassword
-	}
-
-	var refreshToken model.RefreshToken
-	refreshTokenBytes := uuid.NewString()
-	refreshTokenHash, err := bcrypt.GenerateFromPassword([]byte(refreshTokenBytes), bcrypt.DefaultCost)
-	if err != nil {
-		s.logger.Error("password hash generation failed", zap.String("email", email), zap.Error(err))
-		return "", "", errors.New("invalid generate hash of password")
-	}
-
-	refreshToken.TokenHash = string(refreshTokenHash)
-	refreshToken.ExpiresAt = time.Now().AddDate(0, 1, 0)
-	refreshToken.UserId = user.UserId
-
-	_, err = s.repo.CreateRefreshToken(ctx, refreshToken)
-	if err != nil {
-		s.logger.Error("failed create refresh token", zap.String("email", email), zap.Error(err))
-		return "", "", errors.New("invalid create refresh token")
-	}
-
-	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, model.NewClaims(user.UserId)).
-		SignedString([]byte("meow"))
-	if err != nil {
-		s.logger.Error("failed signed token", zap.String("email", email), zap.Error(err))
-		return "", "", errors.New("invalid generate jwt")
-	}
-
-	s.logger.Info("success login", zap.String("email", user.Email))
-	return accessToken, refreshTokenBytes, nil
+	return user, nil
 }
 
-func (s *Service) Refresh(ctx context.Context, accessToken, refreshToken string) (string, error) {
-	token, err := jwt.ParseWithClaims(
-		accessToken,
-		&model.Claims{},
-		func(t *jwt.Token) (interface{}, error) {
-			return []byte("meow"), nil
-		},
-	)
+func (s *Service) GetById(ctx context.Context, userId uuid.UUID) (model.User, error) {
+	user, err := s.repo.GetById(ctx, userId)
 
-	s.logger.Info("access token", zap.String("access token", accessToken))
+	if errors.Is(err, appErrors.ErrUserNotFound) {
+		s.logger.Error("user not found", zap.Error(err))
+		return model.User{}, appErrors.ErrUserNotFound
+	}
 
 	if err != nil {
-		s.logger.Error("invalid validate jwt token", zap.Error(err))
-		return "", err
+		s.logger.Error("failed get user", zap.String("id", userId.String()), zap.Error(err))
+		return model.User{}, fmt.Errorf("failed get user: %v", err)
 	}
 
-	claims, ok := token.Claims.(*model.Claims)
-	if !ok || !token.Valid {
-		return "", errors.New("invalid token")
-	}
-
-	refreshTokenDB, err := s.repo.GetRefreshToken(ctx, claims.UserId)
-	if err != nil {
-		return "", err
-	}
-
-	if err = bcrypt.CompareHashAndPassword([]byte(refreshTokenDB.TokenHash), []byte(refreshToken)); err != nil {
-		s.logger.Error("invalid refresh token", zap.Error(err))
-		return "", err
-	}
-
-	if time.Now().After(refreshTokenDB.ExpiresAt) {
-		s.logger.Error("refresh token expired")
-		return "", nil
-	}
-
-	newAccessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, model.NewClaims(claims.UserId)).
-		SignedString([]byte("meow"))
-	if err != nil {
-		s.logger.Error("failed signed token", zap.String("user_id", claims.UserId.String()), zap.Error(err))
-		return "", errors.New("invalid generate jwt")
-	}
-
-	return newAccessToken, nil
+	return user, nil
 }

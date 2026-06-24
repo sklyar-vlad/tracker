@@ -7,11 +7,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type RefreshToken struct {
-	TokenHash string
-	UserId    uuid.UUID
-	CreatedAt time.Time
-	ExpiresAt time.Time
+type Tokens struct {
+	AccessToken  string
+	RefreshToken string
+	UserId       uuid.UUID
+	CreatedAt    time.Time
+	ExpiresAt    time.Time
 }
 
 type Claims struct {

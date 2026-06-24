@@ -11,8 +11,8 @@
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="email">Email Address</label>
-          <input id="email" v-model="email" type="email" placeholder="you@example.com" required />
+          <label for="email">Login</label>
+          <input id="email" v-model="email" type="text" placeholder="you@example.com" required />
         </div>
 
         <div class="form-group">
@@ -61,16 +61,27 @@ onMounted(() => {
 
 const handleLogin = async () => {
   try {
+    const isEmail = email.value.includes('@')
+
+    const payload = isEmail
+      ? {
+          email: email.value,
+          username: '',
+          password: password.value,
+        }
+      : {
+          username: email.value,
+          email: '',
+          password: password.value,
+        }
+
     const res = await fetch('http://localhost:8080/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value,
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!res.ok) {
