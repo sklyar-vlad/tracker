@@ -1,6 +1,6 @@
 <template>
   <div class="main-layout">
-    <Header />
+    <WelcomeHeader />
   </div>
   <div class="auth-container">
     <div class="auth-card">
@@ -44,7 +44,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import Header from '@/components/HeaderAuth.vue'
+import WelcomeHeader from '@/components/Header/WelcomeHeader.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -107,126 +107,184 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
   position: relative;
   overflow: hidden;
   padding: 20px;
 }
 
+/* glass card как header/hero */
 .auth-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 48px 40px;
   width: 100%;
   max-width: 420px;
-  box-shadow: var(--shadow-lg);
+
+  padding: 48px 40px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 15px 60px rgba(0, 0, 0, 0.35),
+    0 0 30px rgba(149, 162, 223, 0.08);
+
   position: relative;
   z-index: 1;
 }
 
+/* glow background как hero */
+.auth-container::before {
+  content: '';
+  position: absolute;
+
+  width: 700px;
+  height: 700px;
+
+  background: radial-gradient(circle, rgba(149, 162, 223, 0.18), transparent 60%);
+
+  filter: blur(50px);
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  z-index: 0;
+}
+
+/* HEADER TEXT */
 .auth-header {
   text-align: center;
   margin-bottom: 32px;
 }
 
 .auth-header h1 {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 800;
+
   color: var(--text-primary);
-  margin: 0 0 8px 0;
+
+  text-shadow: 0 0 10px rgba(149, 162, 223, 0.2);
 }
 
 .auth-header p {
   font-size: 14px;
   color: var(--text-secondary);
-  margin: 0;
 }
 
+/* FORM */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   margin-bottom: 28px;
 }
 
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* INPUT — glass style */
+.form-group input {
+  padding: 12px 14px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: var(--text-primary);
+
+  backdrop-filter: blur(10px);
+
+  transition: all 0.25s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+
+  border-color: var(--accent-primary);
+
+  box-shadow:
+    0 0 0 3px rgba(100, 200, 255, 0.15),
+    0 0 20px rgba(149, 162, 223, 0.15);
+}
+
+/* PLACEHOLDER */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
-.form-group label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.form-group input {
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 14px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-primary-light);
-}
-
-.form-group input::placeholder {
-  color: var(--text-tertiary);
-}
-
+/* BUTTON BASE (как в hero) */
 .btn {
+  width: 100%;
+
   padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
+  border-radius: 10px;
+
   font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
+  font-weight: 700;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-family: inherit;
+
+  text-decoration: none;
+
+  transition: all 0.25s ease;
+
+  font-family: 'Evolventa', sans-serif;
 }
 
+/* PRIMARY — neon gradient */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
+  border: none;
+
   color: white;
+
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
+
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.25);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(100, 200, 255, 0.3);
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 15px 40px rgba(59, 130, 246, 0.35),
+    0 0 30px rgba(149, 162, 223, 0.2);
 }
 
-.btn-primary:active {
-  transform: translateY(0);
-}
-
+/* SECONDARY — glass */
 .btn-secondary {
-  background: var(--bg-tertiary);
-  color: var(--accent-primary);
-  border: 2px solid var(--accent-primary);
+  background: rgba(255, 255, 255, 0.06);
+
+  color: var(--text-primary);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
-  background: var(--accent-primary);
-  color: white;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+
+  border-color: var(--accent-primary);
+
+  box-shadow: 0 0 25px rgba(149, 162, 223, 0.15);
 }
 
 .btn-full {
   width: 100%;
 }
 
+/* divider */
 .auth-divider {
   text-align: center;
   margin-bottom: 20px;
@@ -234,6 +292,7 @@ const handleLogin = async () => {
   color: var(--text-secondary);
 }
 
+/* RESPONSIVE */
 @media (max-width: 640px) {
   .auth-card {
     padding: 32px 24px;
