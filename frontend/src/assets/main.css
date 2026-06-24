@@ -90,11 +90,15 @@ body {
 /* =========================
    BASE BODY
 ========================= */
+
+@font-face {
+  font-family: 'Evolventa';
+  src: url('/Evolventa-Bold.woff2') format('woff2');
+  font-weight: 400;
+}
+
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', sans-serif;
+  font-family: 'Evolventa', sans-serif;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -106,7 +110,9 @@ body {
 
   color: var(--text-primary);
 
-  transition: background 0.4s ease, color 0.3s ease;
+  transition:
+    background 0.4s ease,
+    color 0.3s ease;
 }
 
 /* =========================

@@ -55,7 +55,6 @@ const { theme, toggleTheme } = useTheme()
   border-radius: 12px;
 }
 
-
 .logo-link {
   text-decoration: none;
   display: flex;
@@ -63,7 +62,7 @@ const { theme, toggleTheme } = useTheme()
   font-size: 36px;
   font-weight: 700;
 
-  transition: all .3s ease;
+  transition: all 0.3s ease;
 }
 
 .logo-link:hover {
@@ -71,33 +70,33 @@ const { theme, toggleTheme } = useTheme()
 }
 
 .self {
-  color: #D6DDE0;
-  transition: .3s;
+  color: #d6dde0;
+  transition: 0.3s;
 }
 
 .slash {
-  color: #D6DDE0;
+  color: #d6dde0;
   margin: 0 4px;
 
   animation: slashGlow 3s infinite ease-in-out;
 }
 
 .dev {
-  color: #95A2DF;
+  color: #95a2df;
   font-weight: 800;
-  transition: .3s;
+  transition: 0.3s;
 
   text-shadow:
-    0 0 10px rgba(149,162,223,.3),
-    0 0 20px rgba(149,162,223,.2);
+    0 0 10px rgba(149, 162, 223, 0.3),
+    0 0 20px rgba(149, 162, 223, 0.2);
 }
 
 .logo-link:hover .dev {
   color: #b8c3ff;
 
   text-shadow:
-    0 0 15px rgba(149,162,223,.8),
-    0 0 40px rgba(149,162,223,.4);
+    0 0 15px rgba(149, 162, 223, 0.8),
+    0 0 40px rgba(149, 162, 223, 0.4);
 }
 
 .nav {
@@ -112,17 +111,17 @@ const { theme, toggleTheme } = useTheme()
 .nav a {
   position: relative;
 
-  font-family: "Source Sans Pro", sans-serif;
+  font-family: 'Evolventa', sans-serif;
   font-size: 20px;
   font-weight: 700;
 
   text-transform: uppercase;
-  letter-spacing: .1px;
+  letter-spacing: 0.1px;
 
-  color: #D6DDE0;
+  color: #d6dde0;
   text-decoration: none;
 
-  transition: .3s;
+  transition: 0.3s;
 }
 
 .nav a::after {
@@ -135,15 +134,11 @@ const { theme, toggleTheme } = useTheme()
   width: 0;
   height: 2px;
 
-  background: linear-gradient(
-    90deg,
-    #95A2DF,
-    #3B82F6
-  );
+  background: linear-gradient(90deg, #95a2df, #3b82f6);
 
   border-radius: 10px;
 
-  transition: .3s ease;
+  transition: 0.3s ease;
 
   transform: translateX(-50%);
 }
@@ -151,8 +146,7 @@ const { theme, toggleTheme } = useTheme()
 .nav a:hover {
   color: white;
 
-  text-shadow:
-    0 0 10px rgba(255,255,255,.4);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
 .nav a:hover::after {
@@ -167,19 +161,26 @@ const { theme, toggleTheme } = useTheme()
 /* BUTTON */
 .theme-btn {
   background: transparent;
-  border: 1px solid rgba(255,255,255,.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 6px 10px;
   border-radius: 8px;
 
   cursor: pointer;
   color: #fff;
 
-  transition: .2s;
+  transition: 0.2s;
 }
 
 .theme-btn:hover {
   transform: scale(1.08);
-  border-color: #3B82F6;
+  border-color: #3b82f6;
+}
+
+@font-face {
+  font-family: 'Evolventa';
+  src: url('/Evolventa-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
 }
 
 @keyframes headerAppear {
@@ -195,15 +196,16 @@ const { theme, toggleTheme } = useTheme()
 }
 
 @keyframes slashGlow {
-  0%,100% {
-    opacity: .6;
+  0%,
+  100% {
+    opacity: 0.6;
   }
 
   50% {
     opacity: 1;
     text-shadow:
-      0 0 10px #95A2DF,
-      0 0 25px #95A2DF;
+      0 0 10px #95a2df,
+      0 0 25px #95a2df;
   }
 }
 
