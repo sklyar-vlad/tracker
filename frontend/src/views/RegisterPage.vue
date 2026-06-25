@@ -21,18 +21,14 @@
         </div>
 
         <div class="form-group">
-          <input id="password" v-model="password" type="password" required />
+          <input id="password" v-model="password" type="password" required :class="{ 'input-error': passwordError }"/>
           <label for="password">Password</label>
         </div>
 
         <div class="form-group">
-          <input id="confirm-password" v-model="confirmPassword" type="password" required />
+          <input id="confirm-password" v-model="confirmPassword" type="password" required :class="{ 'input-error': passwordError }"/>
           <label for="confirm-password">Confirm Password</label>
-        </div>
-
-        <div v-if="passwordError" class="error-message">
-          {{ passwordError }}
-        </div>
+        </div>      
 
         <button type="submit" class="btn btn-primary btn-full">Create Account</button>
       </form>
@@ -266,6 +262,15 @@ const handleRegister = async () => {
   border-radius: 6px;
 }
 
+.input-error {
+  border-color: var(--error) !important;
+}
+
+.input-error:focus {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
 /* =========================
    DIVIDER
 ========================= */
@@ -326,33 +331,6 @@ const handleRegister = async () => {
   border-color: var(--border-strong);
 
   box-shadow: 0 0 0 1px var(--border-glow);
-}
-
-.error-message {
-  margin-top: 6px;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  color: var(--error);
-
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  animation: errorIn 0.5s ease;
-}
-
-/* лёгкий вход */
-@keyframes errorIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* =========================
