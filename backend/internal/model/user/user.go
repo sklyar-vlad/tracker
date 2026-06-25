@@ -10,11 +10,12 @@ import (
 )
 
 type User struct {
-	UserId   uuid.UUID
-	Role     string
-	Username string
-	Email    string
-	Password string
+	UserId        uuid.UUID
+	Role          string
+	Username      string
+	Email         string
+	EmailVerified bool
+	Password      string
 }
 
 func NewUser(username, email, password string) (User, error) {
@@ -26,5 +27,5 @@ func NewUser(username, email, password string) (User, error) {
 		return User{}, fmt.Errorf("invalid password: %w", errors.ErrInvalidPassword)
 	}
 
-	return User{uuid.New(), "user", username, email, password}, nil
+	return User{uuid.New(), "user", username, email, false, password}, nil
 }

@@ -30,11 +30,20 @@ func NewRepository(pool *pgxpool.Pool, logger *zap.Logger) *repository {
 
 func (r *repository) Create(ctx context.Context, user model.User) (model.User, error) {
 	query := `
-	INSERT INTO users (user_id, role, username, email, password)
-	VALUES ($1, $2, $3,	$4, $5)
+	INSERT INTO users (user_id, role, username, email, email_verified, password)
+	VALUES ($1, $2, $3,	$4, $5, $6)
 	`
 
-	_, err := r.pool.Exec(ctx, query, user.UserId, user.Role, user.Username, user.Email, user.Password)
+	_, err := r.pool.Exec(
+		ctx,
+		query,
+		user.UserId,
+		user.Role,
+		user.Username,
+		user.Email,
+		user.EmailVerified,
+		user.Password,
+	)
 	if err != nil {
 		r.logger.Error("failed insert user in database", zap.Error(err))
 		return model.User{}, mapDBError(err)
@@ -47,7 +56,7 @@ func (r *repository) Create(ctx context.Context, user model.User) (model.User, e
 
 func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, error) {
 	query := `
-	SELECT user_id, role, username, email, password
+	SELECT user_id, role, username, email, email_verified, password
 	FROM users
 	WHERE email = $1 or username = $1
 	LIMIT 1
@@ -60,6 +69,7 @@ func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, 
 		&user.Role,
 		&user.Username,
 		&user.Email,
+		&user.EmailVerified,
 		&user.Password,
 	)
 

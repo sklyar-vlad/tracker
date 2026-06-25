@@ -16,6 +16,7 @@ import (
 	"github.com/sklyar-vlad/selfDev/internal/handler"
 	authHand "github.com/sklyar-vlad/selfDev/internal/handler/auth"
 	userHand "github.com/sklyar-vlad/selfDev/internal/handler/user"
+	emailAdapt "github.com/sklyar-vlad/selfDev/internal/integrations/resend"
 	authRepo "github.com/sklyar-vlad/selfDev/internal/repository/auth"
 	userRepo "github.com/sklyar-vlad/selfDev/internal/repository/user"
 	authSrv "github.com/sklyar-vlad/selfDev/internal/service/auth"
@@ -49,9 +50,10 @@ func main() {
 
 	authRepository := authRepo.NewRepository(pool, logger)
 	userRepository := userRepo.NewRepository(pool, logger)
+	emailAdapter := emailAdapt.NewAdapter(cfg.EmailSender)
 
 	userService := userSrv.NewService(userRepository, logger)
-	authService := authSrv.NewService(authRepository, userService, cfg.JWT, logger)
+	authService := authSrv.NewService(authRepository, userService, emailAdapter, cfg.JWT, logger)
 
 	authHandler := authHand.NewHandler(authService, logger)
 	userHandler := userHand.NewHandler(userService, logger)

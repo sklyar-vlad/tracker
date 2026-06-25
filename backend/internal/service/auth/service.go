@@ -22,6 +22,10 @@ type UserService interface {
 	GetByLogin(ctx context.Context, username, password string) (userModel.User, error)
 }
 
+type EmailAdapter interface {
+	SendEmailVerification(email string) error
+}
+
 type Repository interface {
 	CreateRefreshToken(ctx context.Context, Tokens authModel.Tokens) error
 	// GetTokens(ctx context.Context, userId uuid.UUID) (authModel.Tokens, error)
@@ -29,17 +33,30 @@ type Repository interface {
 }
 
 type Service struct {
-	repo        Repository
-	userService UserService
-	cfg         config.ConfigJWT
-	logger      *zap.Logger
+	repo         Repository
+	userService  UserService
+	emailAdapter EmailAdapter
+	cfg          config.ConfigJWT
+	logger       *zap.Logger
 }
 
-func NewService(repo Repository, userService UserService, config config.ConfigJWT, logger *zap.Logger) *Service {
+func NewService(
+	repo Repository,
+	userService UserService,
+	emailAdapter EmailAdapter,
+	config config.ConfigJWT,
+	logger *zap.Logger,
+) *Service {
 	return &Service{repo: repo, userService: userService, cfg: config, logger: logger}
 }
 
 func (s *Service) Register(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
+	go func() {
+		if err := s.emailAdapter.SendEmailVerification(email); err != nil {
+			s.logger.Error("failed send message for verification", zap.Error(err))
+		}
+	}()
+
 	user, err := s.userService.CreateUser(ctx, username, email, password)
 
 	if errors.Is(err, appErrors.ErrEmailAlreadyExists) {
@@ -88,6 +105,11 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 
 func (s *Service) Login(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
 	user, err := s.userService.GetByLogin(ctx, username, email)
+
+	if !user.EmailVerified {
+		s.logger.Error("user's email not verified", zap.Error(appErrors.ErrEmailNotVerified))
+		return authModel.Tokens{}, appErrors.ErrEmailNotVerified
+	}
 
 	if errors.Is(err, appErrors.ErrUserNotFound) {
 		s.logger.Error("user not found", zap.Error(appErrors.ErrUserNotFound))

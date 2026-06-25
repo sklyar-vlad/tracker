@@ -26,11 +26,19 @@ type ConfigJWT struct {
 	Secret string
 }
 
+type ConfigEmailSender struct {
+	ApiKey  string
+	From    string
+	Html    string
+	Subject string
+}
+
 type config struct {
-	Server   ConfigServer
-	Logger   ConfigLogger
-	Database ConfigDatabase
-	JWT      ConfigJWT
+	Server      ConfigServer
+	Logger      ConfigLogger
+	Database    ConfigDatabase
+	JWT         ConfigJWT
+	EmailSender ConfigEmailSender
 }
 
 func NewConfig() (config, error) {
@@ -56,7 +64,13 @@ func NewConfig() (config, error) {
 			DatabaseURL: getEnv("DATABASE_URL", "postgres://admin:admin@db:5432/self-dev"),
 		},
 		JWT: ConfigJWT{
-			Secret: getEnv("SECRET", "secret-key"),
+			Secret: getEnv("SECRET", ""),
+		},
+		EmailSender: ConfigEmailSender{
+			ApiKey:  getEnv("RESEND_API_KEY", ""),
+			From:    getEnv("FROM_EMAIL", ""),
+			Html:    getEnv("HTML", ""),
+			Subject: getEnv("SUBJECT", ""),
 		},
 	}
 

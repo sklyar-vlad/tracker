@@ -10,6 +10,7 @@ var (
 
 	ErrUserNotFound = errors.New("user not found")
 
-	ErrUnauthorized    = errors.New("incorrect password")
-	ErrTokenWasExpired = errors.New("token was expired")
+	ErrEmailNotVerified = errors.New("email not verified")
+	ErrUnauthorized     = errors.New("incorrect password")
+	ErrTokenWasExpired  = errors.New("token was expired")
 )

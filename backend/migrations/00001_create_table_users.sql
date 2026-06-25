@@ -6,6 +6,7 @@ CREATE TABLE users (
     role ROLE NOT NULL DEFAULT 'user', 
     username VARCHAR(30) UNIQUE,
     email VARCHAR(100) UNIQUE NOT NULL,
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     password VARCHAR(100) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

@@ -8,6 +8,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
+	github.com/resend/resend-go/v3 v3.9.2
 	go.uber.org/zap v1.28.0
 	golang.org/x/crypto v0.53.0
 )
