@@ -4,19 +4,9 @@ services:
     container_name: self-dev-backend
     networks:
       - self-dev
-    ports:
-      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
-
-  frontend:
-    image: self-dev-frontend
-    container_name: self-dev-frontend
-    networks:
-      - self-dev
-    ports:
-      - "5173:5173"
 
   db:
     image: postgres:18-alpine
@@ -27,8 +17,6 @@ services:
       POSTGRES_DB: self-dev
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-    ports:
-      - "5432:5432"
     volumes:
       - "self-dev:/var/lib/postgresql"
     healthcheck:
