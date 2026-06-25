@@ -56,3 +56,8 @@ tasks:
     desc: comeback to previous version of migrations
     cmds:
       - goose down -env ./infra/.env
+
+  logs-backend:
+    desc: check logs in real time in backend
+    cmds:
+      - docker logs -f self-dev-backend
