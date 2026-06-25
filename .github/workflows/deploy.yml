@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 5.181.22.156
+          username: deploy
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/deploy/apps/selfdev
+            git pull
+            docker compose up -d --build
