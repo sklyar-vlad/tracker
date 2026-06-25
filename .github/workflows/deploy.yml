@@ -16,6 +16,6 @@ jobs:
           username: deploy
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/deploy/apps/selfdev
+            cd /home/deploy/apps/selfDev
             git pull
-            docker compose up -d --build
+            task up
