@@ -47,12 +47,13 @@ func NewService(
 	config config.ConfigJWT,
 	logger *zap.Logger,
 ) *Service {
-	return &Service{repo: repo, userService: userService, cfg: config, logger: logger}
+	return &Service{repo: repo, userService: userService, emailAdapter: emailAdapter, cfg: config, logger: logger}
 }
 
 func (s *Service) Register(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
 	go func() {
-		if err := s.emailAdapter.SendEmailVerification(email); err != nil {
+		err := s.emailAdapter.SendEmailVerification(email)
+		if err != nil {
 			s.logger.Error("failed send message for verification", zap.Error(err))
 		}
 	}()
@@ -106,11 +107,6 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 func (s *Service) Login(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
 	user, err := s.userService.GetByLogin(ctx, username, email)
 
-	if !user.EmailVerified {
-		s.logger.Error("user's email not verified", zap.Error(appErrors.ErrEmailNotVerified))
-		return authModel.Tokens{}, appErrors.ErrEmailNotVerified
-	}
-
 	if errors.Is(err, appErrors.ErrUserNotFound) {
 		s.logger.Error("user not found", zap.Error(appErrors.ErrUserNotFound))
 		return authModel.Tokens{}, appErrors.ErrUserNotFound
@@ -119,6 +115,11 @@ func (s *Service) Login(ctx context.Context, username, email, password string) (
 	if err != nil {
 		s.logger.Error("failed get user", zap.Error(err))
 		return authModel.Tokens{}, err
+	}
+
+	if !user.EmailVerified {
+		s.logger.Error("user's email not verified", zap.Error(appErrors.ErrEmailNotVerified))
+		return authModel.Tokens{}, appErrors.ErrEmailNotVerified
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
@@ -153,6 +154,10 @@ func (s *Service) Login(ctx context.Context, username, email, password string) (
 	s.logger.Info("success login", zap.String("email", user.Email))
 	return tokens, nil
 }
+
+// func (s *Service) Verify(ctx context.Context, token string) error {
+
+// }
 
 // func (s *Service) Refresh(ctx context.Context, accessToken, Tokens string) (string, error) {
 // 	token, err := jwt.ParseWithClaims(

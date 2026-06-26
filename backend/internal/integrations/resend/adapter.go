@@ -12,10 +12,11 @@ type adapter struct {
 	logger *zap.Logger
 }
 
-func NewAdapter(cfg config.ConfigEmailSender) *adapter {
+func NewAdapter(cfg config.ConfigEmailSender, logger *zap.Logger) *adapter {
 	return &adapter{
 		client: newClient(cfg.ApiKey),
 		config: cfg,
+		logger: logger,
 	}
 }
 
@@ -27,6 +28,7 @@ func (a *adapter) SendEmailVerification(email string) error {
 	}
 
 	err = a.client.sendEmail(msg)
+	a.logger.Info("msg", zap.String("msg", string(msg.Html)))
 	if err != nil {
 		a.logger.Error("failed send email message", zap.Error(err))
 		return err

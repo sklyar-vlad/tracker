@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	model "github.com/sklyar-vlad/selfDev/internal/model/auth"
@@ -12,12 +13,14 @@ import (
 
 type repository struct {
 	pool   *pgxpool.Pool
+	redis  *redis.Client
 	logger *zap.Logger
 }
 
-func NewRepository(pool *pgxpool.Pool, logger *zap.Logger) *repository {
+func NewRepository(pool *pgxpool.Pool, redis *redis.Client, logger *zap.Logger) *repository {
 	return &repository{
 		pool:   pool,
+		redis:  redis,
 		logger: logger,
 	}
 }

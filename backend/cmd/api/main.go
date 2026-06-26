@@ -43,14 +43,20 @@ func main() {
 	ctx := context.Background()
 	pool, err := database.NewPostgres(ctx, cfg.Database)
 	if err != nil {
-		logger.Fatal("failed connect to the database", zap.Error(err))
+		logger.Fatal("failed connect to the postgres", zap.Error(err))
 	}
-
 	defer pool.Close()
+	redis, err := database.NewRedis(ctx, cfg.Database)
+	if err != nil {
+		logger.Fatal("failed connect to the redis", zap.Error(err))
+	}
+	defer func() {
+		_ = redis.Close()
+	}()
 
-	authRepository := authRepo.NewRepository(pool, logger)
+	authRepository := authRepo.NewRepository(pool, redis, logger)
 	userRepository := userRepo.NewRepository(pool, logger)
-	emailAdapter := emailAdapt.NewAdapter(cfg.EmailSender)
+	emailAdapter := emailAdapt.NewAdapter(cfg.EmailSender, logger)
 
 	userService := userSrv.NewService(userRepository, logger)
 	authService := authSrv.NewService(authRepository, userService, emailAdapter, cfg.JWT, logger)

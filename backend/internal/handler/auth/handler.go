@@ -3,10 +3,12 @@ package user
 import (
 	"context"
 	"encoding/json"
+	// "errors"
 	"net/http"
 
 	"go.uber.org/zap"
 
+	// appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/handler/auth/dto"
 	model "github.com/sklyar-vlad/selfDev/internal/model/auth"
 )
@@ -14,6 +16,7 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, username, email, password string) (model.Tokens, error)
 	Login(ctx context.Context, username, email, password string) (model.Tokens, error)
+	// Verify(ctx context.Context, token string) error
 	// Logout(ctx context.Context, refreshToken string) error
 	// Refresh(ctx context.Context, accessToken, refreshToken string) (string, error)
 }
@@ -66,6 +69,27 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
+
+// func (h *handler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
+// 	token := r.PathValue("token")
+
+// 	if token == "" {
+// 		h.logger.Error("invalid token", zap.String("token", token))
+// 		http.Error(w, "invalid token", http.StatusBadRequest)
+// 	}
+
+// 	err := h.service.Verify(r.Context(), token)
+
+// 	if errors.Is(err, appErrors.ErrTokenWasExpired) {
+// 		h.logger.Error("token was expired", zap.Error(appErrors.ErrTokenWasExpired))
+// 		http.Error(w, appErrors.ErrTokenWasExpired.Error(), http.StatusGone)
+// 	}
+
+// 	if err != nil {
+// 		h.logger.Error("failed verify email", zap.Error(err))
+// 		http.Error(w, "failed verify email", http.StatusInternalServerError)
+// 	}
+// }
 
 func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	var input dto.AuthRequest
