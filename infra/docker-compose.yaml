@@ -14,7 +14,10 @@ services:
     networks:
       - self-dev
     ports:
-      - "5173:5173"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/letsencrypt:/etc/letsencrypt:ro"
 
   db:
     image: postgres:18-alpine
