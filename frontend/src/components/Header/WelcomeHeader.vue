@@ -16,7 +16,9 @@
       </button>
 
       <RouterLink to="/login" class="login">
-        <span class="login">Log in<img :src="theme === 'dark' ? '/icons/arrowWhite.svg' : '/icons/arrowDark.svg'" /></span>
+        <span class="login"
+          >Log in<img :src="theme === 'dark' ? '/icons/arrowWhite.svg' : '/icons/arrowDark.svg'"
+        /></span>
       </RouterLink>
     </div>
   </header>

@@ -12,6 +12,7 @@ type ConfigLogger struct {
 }
 
 type ConfigServer struct {
+	Host         string
 	Addr         string
 	ReadTimeout  int
 	WriteTimeout int
@@ -28,10 +29,10 @@ type ConfigJWT struct {
 }
 
 type ConfigEmailSender struct {
-	ApiKey  string
-	From    string
-	Html    string
-	Subject string
+	ApiKey   string
+	From     string
+	Subject  string
+	Endpoint string
 }
 
 type config struct {
@@ -53,6 +54,7 @@ func NewConfig() (config, error) {
 
 	cfg := config{
 		Server: ConfigServer{
+			Host:         getEnv("HOST", "localhost"),
 			Addr:         getEnv("ADDR", ":8080"),
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
@@ -69,10 +71,10 @@ func NewConfig() (config, error) {
 			Secret: getEnv("SECRET", ""),
 		},
 		EmailSender: ConfigEmailSender{
-			ApiKey:  getEnv("RESEND_API_KEY", ""),
-			From:    getEnv("FROM_EMAIL", ""),
-			Html:    getEnv("HTML", ""),
-			Subject: getEnv("SUBJECT", ""),
+			ApiKey:   getEnv("RESEND_API_KEY", ""),
+			From:     getEnv("FROM_EMAIL", ""),
+			Subject:  getEnv("SUBJECT", ""),
+			Endpoint: getEnv("ENDPOINT", ""),
 		},
 	}
 

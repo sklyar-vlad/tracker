@@ -23,11 +23,12 @@ type UserService interface {
 }
 
 type EmailAdapter interface {
-	SendEmailVerification(email string) error
+	SendEmailVerification(email, token string) error
 }
 
 type Repository interface {
 	CreateRefreshToken(ctx context.Context, Tokens authModel.Tokens) error
+	SaveTokenVerify(ctx context.Context, token, userId string) error
 	// GetTokens(ctx context.Context, userId uuid.UUID) (authModel.Tokens, error)
 	// DeleteTokens(ctx context.Context, userId uuid.UUID) error
 }
@@ -51,13 +52,6 @@ func NewService(
 }
 
 func (s *Service) Register(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
-	go func() {
-		err := s.emailAdapter.SendEmailVerification(email)
-		if err != nil {
-			s.logger.Error("failed send message for verification", zap.Error(err))
-		}
-	}()
-
 	user, err := s.userService.CreateUser(ctx, username, email, password)
 
 	if errors.Is(err, appErrors.ErrEmailAlreadyExists) {
@@ -74,6 +68,23 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 		s.logger.Error("failed create user", zap.Error(err))
 		return authModel.Tokens{}, fmt.Errorf("failed create user: %v", err)
 	}
+
+	token, err := authModel.NewTokenVerify()
+	if err != nil {
+		s.logger.Error("failed create verify token", zap.Error(err))
+	}
+
+	err = s.repo.SaveTokenVerify(ctx, token.TokenVer, user.UserId.String())
+	if err != nil {
+		s.logger.Error("failed save verify token in redis", zap.Error(err))
+	}
+
+	go func() {
+		err := s.emailAdapter.SendEmailVerification(email, token.TokenVer)
+		if err != nil {
+			s.logger.Error("failed send message for verification", zap.Error(err))
+		}
+	}()
 
 	refreshTokenString, err := bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
 	if err != nil {

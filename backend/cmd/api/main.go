@@ -41,11 +41,13 @@ func main() {
 	}()
 
 	ctx := context.Background()
+
 	pool, err := database.NewPostgres(ctx, cfg.Database)
 	if err != nil {
 		logger.Fatal("failed connect to the postgres", zap.Error(err))
 	}
 	defer pool.Close()
+
 	redis, err := database.NewRedis(ctx, cfg.Database)
 	if err != nil {
 		logger.Fatal("failed connect to the redis", zap.Error(err))

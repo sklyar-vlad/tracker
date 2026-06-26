@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -70,4 +71,23 @@ func (r *repository) CreateRefreshToken(ctx context.Context, tokens model.Tokens
 // 	r.logger.Info("success select token by user_id", zap.String("user_id", refreshToken.UserId.String()))
 
 // 	return refreshToken, nil
+// }
+
+func (r *repository) SaveTokenVerify(ctx context.Context, token, userId string) error {
+	key := "verify_email:" + token
+	return r.redis.Set(ctx, key, userId, 5*time.Hour).Err()
+}
+
+// func consumeToken(ctx context.Context, rdb *redis.Client, token string) (string, error) {
+// 	key := "verify_email:" + token
+
+// 	userID, err := rdb.Get(ctx, key).Result()
+// 	if err != nil {
+// 		return "", err // nil = expired or not found
+// 	}
+
+// 	// сразу удаляем (одноразовый токен)
+// 	_ = rdb.Del(ctx, key)
+
+// 	return userID, nil
 // }

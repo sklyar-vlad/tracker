@@ -21,14 +21,26 @@
         </div>
 
         <div class="form-group">
-          <input id="password" v-model="password" type="password" required :class="{ 'input-error': passwordError }"/>
+          <input
+            id="password"
+            v-model="password"
+            type="password"
+            required
+            :class="{ 'input-error': passwordError }"
+          />
           <label for="password">Password</label>
         </div>
 
         <div class="form-group">
-          <input id="confirm-password" v-model="confirmPassword" type="password" required :class="{ 'input-error': passwordError }"/>
+          <input
+            id="confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            required
+            :class="{ 'input-error': passwordError }"
+          />
           <label for="confirm-password">Confirm Password</label>
-        </div>      
+        </div>
 
         <button type="submit" class="btn btn-primary btn-full">Create Account</button>
       </form>

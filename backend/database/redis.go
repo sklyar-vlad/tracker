@@ -9,7 +9,7 @@ import (
 )
 
 func NewRedis(ctx context.Context, config config.ConfigDatabase) (*redis.Client, error) {
-	opt, err := redis.ParseURL("redis://<user>:<pass>@localhost:6379/<db>")
+	opt, err := redis.ParseURL(config.RedisURL)
 	if err != nil {
 		return nil, err
 	}

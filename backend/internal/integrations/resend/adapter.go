@@ -20,8 +20,14 @@ func NewAdapter(cfg config.ConfigEmailSender, logger *zap.Logger) *adapter {
 	}
 }
 
-func (a *adapter) SendEmailVerification(email string) error {
-	msg, err := newParams(a.config.From, a.config.Html, a.config.Subject, []string{email})
+func (a *adapter) SendEmailVerification(email, token string) error {
+	html, err := newHtml(token, a.config.Endpoint)
+	if err != nil {
+		a.logger.Error("failed create html for message", zap.Error(err))
+		return err
+	}
+
+	msg, err := newParams(a.config.From, html, a.config.Subject, []string{email})
 	if err != nil {
 		a.logger.Error("failed create message request", zap.Error(err))
 		return err
