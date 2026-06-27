@@ -38,6 +38,17 @@ services:
       timeout: 5s
       retries: 10
 
+  db-panel:
+    image: dbeaver/cloudbeaver:latest
+    container_name: self-dev-db-panel
+    networks:
+      - self-dev
+    ports:
+      - "8978:8978"
+    volumes:
+      - "self-dev-dbeaver:/opt/cloudbeaver/workspace"
+
+
   redis:
     image: redis:8-alpine
     container_name: self-dev-redis
@@ -47,6 +58,8 @@ services:
 volumes:
   self-dev:
     name: "self-dev-volume"
+  self-dev-dbeaver:
+    name: "self-dev-dbeaver-volume"
 
 networks:
   self-dev:

@@ -78,16 +78,15 @@ func (r *repository) SaveTokenVerify(ctx context.Context, token, userId string) 
 	return r.redis.Set(ctx, key, userId, 5*time.Hour).Err()
 }
 
-// func consumeToken(ctx context.Context, rdb *redis.Client, token string) (string, error) {
-// 	key := "verify_email:" + token
+func (r *repository) ConsumeToken(ctx context.Context, token string) (string, error) {
+	key := "verify_email:" + token
 
-// 	userID, err := rdb.Get(ctx, key).Result()
-// 	if err != nil {
-// 		return "", err // nil = expired or not found
-// 	}
+	userID, err := r.redis.Get(ctx, key).Result()
+	if err != nil {
+		return "", err 
+	}
 
-// 	// сразу удаляем (одноразовый токен)
-// 	_ = rdb.Del(ctx, key)
+	_ = r.redis.Del(ctx, key)
 
-// 	return userID, nil
-// }
+	return userID, nil
+}

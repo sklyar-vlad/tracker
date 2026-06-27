@@ -15,6 +15,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, user model.User) (model.User, error)
+	Update(ctx context.Context, user model.User) error
 	GetByLogin(ctx context.Context, login string) (model.User, error)
 	GetById(ctx context.Context, userId uuid.UUID) (model.User, error)
 	// Update(ctx context.Context, user model.User) (model.User, error)
@@ -55,6 +56,16 @@ func (s *Service) CreateUser(ctx context.Context, username, email, password stri
 	}
 
 	return s.repo.Create(ctx, user)
+}
+
+func (s *Service) UpdateUser(ctx context.Context, user model.User) error {
+	
+
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) GetByLogin(ctx context.Context, username, email string) (model.User, error) {

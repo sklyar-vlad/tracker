@@ -105,7 +105,7 @@ const handleRegister = async () => {
     }
 
     router.push({
-      path: '/me/profile',
+      path: '/login',
       query: {
         registered: 'true',
       },

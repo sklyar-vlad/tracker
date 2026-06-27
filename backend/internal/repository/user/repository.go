@@ -54,6 +54,39 @@ func (r *repository) Create(ctx context.Context, user model.User) (model.User, e
 	return user, nil
 }
 
+func (r *repository) Update(ctx context.Context, user model.User) error {
+	query := `
+	UPDATE users
+	SET 
+		role = $2,
+		username = $3,
+		email = $4,
+		email_verified = $5,
+		password = $6
+	WHERE user_id = $1
+	`
+
+	_, err := r.pool.Exec(
+		ctx,
+		query,
+		user.UserId,
+		user.Role,
+		user.Username,
+		user.Email,
+		user.EmailVerified,
+		user.Password,
+	)
+
+	if err != nil {
+		r.logger.Error("failed update user in database", zap.Error(err))
+		return fmt.Errorf("failed update user in database: %v", err)
+	}
+
+	r.logger.Info("success update user in database", zap.String("email", user.Email))
+
+	return nil
+}
+
 func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, error) {
 	query := `
 	SELECT user_id, role, username, email, email_verified, password
@@ -88,7 +121,7 @@ func (r *repository) GetByLogin(ctx context.Context, login string) (model.User, 
 
 func (r *repository) GetById(ctx context.Context, userId uuid.UUID) (model.User, error) {
 	query := `
-	SELECT user_id, role, username, email
+	SELECT user_id, role, username, email, email_verified, password
 	FROM users
 	WHERE user_id = $1
 	LIMIT 1
@@ -100,6 +133,8 @@ func (r *repository) GetById(ctx context.Context, userId uuid.UUID) (model.User,
 		&user.Role,
 		&user.Username,
 		&user.Email,
+		&user.EmailVerified,
+		&user.Password,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {

@@ -49,7 +49,7 @@ const password = ref('')
 
 onMounted(() => {
   if (route.query.registered === 'true') {
-    toast.success('Login successfully!')
+    toast.success('verify your email')
   }
 })
 
