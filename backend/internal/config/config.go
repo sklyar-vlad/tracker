@@ -17,6 +17,7 @@ type ConfigServer struct {
 	ReadTimeout  int
 	WriteTimeout int
 	IdleTimeout  int
+	Middleware string
 }
 
 type ConfigDatabase struct {
@@ -59,6 +60,7 @@ func NewConfig() (config, error) {
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
 			IdleTimeout:  idleTimeout,
+			Middleware: getEnv("MIDDLEWARE", "http://localhost:80"),
 		},
 		Logger: ConfigLogger{
 			Env: getEnv("ENV", "production"),
