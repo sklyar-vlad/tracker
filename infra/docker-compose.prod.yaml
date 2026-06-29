@@ -28,8 +28,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - "self-dev:/var/lib/postgresql"
     healthcheck:
@@ -47,6 +45,9 @@ services:
       - "8978:8978"
     volumes:
       - "self-dev-dbeaver:/opt/cloudbeaver/workspace"
+    depends_on:
+      db:
+        condition: service_healthy
 
 
   redis:

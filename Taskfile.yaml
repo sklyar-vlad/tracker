@@ -6,32 +6,69 @@ tasks:
       - task --list
     silent: true
 
-  build-backend:
-    desc: build backend side
-    cmds:
-      - docker build -t self-dev-backend -f infra/Dockerfile.backend .
+### BUILD DEV
 
-  build-frontend:
-    desc: build frontend side
+  dev-build-backend:
+    desc: build backend side for develope
     cmds:
-      - docker build -t self-dev-frontend -f infra/Dockerfile.frontend .
+      - docker build -t self-dev-backend -f infra/Dockerfile.backend.dev .
 
-  dev-frontend:
-    desc: up only frontend side of project and develope in real time
+  dev-build-frontend:
+    desc: build frontend side for develope
     cmds:
-      - cd frontend && npm run dev
+      - docker build -t self-dev-frontend -f infra/Dockerfile.frontend.dev .
 
-  up:
-    desc: start service
+  dev-build:
+    desc: build backend and frontend for develope
     cmds:
-      - task build-backend
-      - task build-frontend
-      - docker compose -f ./infra/docker-compose.yaml up -d
+      - task build dev-build-backend
+      - task build dev-build-frontend
 
-  down:
-    desc: stop service
+### BUILD PROD
+
+  prod-build-backend:
+    desc: build backend side for production
     cmds:
-      - docker compose -f ./infra/docker-compose.yaml down
+      - docker build -t self-dev-backend -f infra/Dockerfile.backend.prod .
+  
+  prod-build-frontend:
+    desc: build frontend side for production
+    cmds:
+      - docker build -t self-dev-frontend -f infra/Dockerfile.frontend.prod .
+
+  prod-build:
+    desc: build backend and frontend for production
+    cmds:
+      - task build prod-build-backend
+      - task build prod-build-frontend
+
+### COMPOSE (DEV)
+
+  dev-up:
+    desc: start all containers for develope with open backend ports and database
+    cmds:
+      - task dev-build
+      - docker compose -f ./infra/docker-compose.dev.yaml up -d
+
+  dev-down:
+    desc: stop all containers 
+    cmds:
+      - docker compose -f ./infra/docker-compose.dev.yaml down
+
+### COMPOSE (PROD)
+
+  prod-up:
+    desc: start all containers for production 
+    cmds:
+      - task prod-build
+      - docker compose -f ./infra/docker-compose.prod.yaml up -d
+
+  prod-down:
+    desc: stop all containers 
+    cmds:
+      - docker compose -f ./infra/docker-compose.prod.yaml down
+
+### LINTING
 
   lint:
     desc: formatting project
@@ -39,6 +76,9 @@ tasks:
       - cd backend && go fmt ./...
       - cd backend && golangci-lint run --fix
       - cd frontend && npx prettier . --write
+
+
+### DATABASE 
 
   migration:
     desc: create new migration file. example "task migration NAME=name_of_migration"
@@ -52,12 +92,36 @@ tasks:
     cmds:
       - goose up -env ./infra/.env
 
+  migrate-one:
+    desc: choose next version of migrations 
+    cmds:
+      - goose up-by-one -env ./infra/.env
+
   rollback:
+    desc: roll back all migrations
+    cmds:
+      - goose reset -env ./infra/.env
+
+  rollback-one:
     desc: comeback to previous version of migrations
     cmds:
       - goose down -env ./infra/.env
 
+### LOGS
+
   logs-backend:
-    desc: check logs in real time in backend
+    desc: check logs in real time in backend container
     cmds:
       - docker logs -f self-dev-backend
+
+  logs-frontend:
+    desc: check logs in real time in frontend container
+    cmds:
+      - docker logs -f self-dev-frontend
+
+### DEV
+
+  dev-frontend:
+    desc: up only frontend side of project and develope in real time
+    cmds:
+      - cd frontend && npm run dev

@@ -1,0 +1,72 @@
+services:
+  backend:
+    image: self-dev-backend
+    container_name: self-dev-backend
+    networks:
+      - self-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: self-dev-frontend
+    container_name: self-dev-frontend
+    networks:
+      - self-dev
+    ports:
+      - "80:80"
+      - "443:443"
+
+  db:
+    image: postgres:18-alpine
+    container_name: self-dev-db
+    networks:
+      - self-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - "self-dev:/var/lib/postgresql"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d self-dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-panel:
+    image: dbeaver/cloudbeaver:latest
+    container_name: self-dev-db-panel
+    networks:
+      - self-dev
+    ports:
+      - "8978:8978"
+    volumes:
+      - "self-dev-dbeaver:/opt/cloudbeaver/workspace"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    container_name: self-dev-redis
+    networks:
+      - self-dev
+
+volumes:
+  self-dev:
+    name: "self-dev-volume"
+  self-dev-dbeaver:
+    name: "self-dev-dbeaver-volume"
+
+networks:
+  self-dev:
+    name: "self-dev-network"
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
