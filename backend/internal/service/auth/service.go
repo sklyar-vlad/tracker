@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -95,60 +97,63 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 	return nil
 }
 
-func (s *Service) Login(ctx context.Context, username, email, password string) (authModel.Tokens, error) {
+func (s *Service) Login(ctx context.Context, username, email, password string) (string, string, error) {
 	user, err := s.userService.GetByLogin(ctx, username, email)
 
 	if errors.Is(err, appErrors.ErrUserNotFound) {
 		s.logger.Error("user not found", zap.Error(appErrors.ErrUserNotFound))
-		return authModel.Tokens{}, appErrors.ErrUserNotFound
+		return "", "", appErrors.ErrUserNotFound
 	}
 
 	if err != nil {
 		s.logger.Error("failed get user", zap.Error(err))
-		return authModel.Tokens{}, err
+		return "", "", err
 	}
 
 	if !user.EmailVerified {
 		s.logger.Error("user's email not verified", zap.Error(appErrors.ErrEmailNotVerified))
-		return authModel.Tokens{}, appErrors.ErrEmailNotVerified
+		return "", "", appErrors.ErrEmailNotVerified
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return authModel.Tokens{}, appErrors.ErrInvalidPassword
+		return "", "", appErrors.ErrInvalidPassword
 	}
 
-	refreshTokenString, err := bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewRefreshClaims(user.UserId)).SignedString([]byte(s.cfg.Secret))
 	if err != nil {
 		s.logger.Error("failed hash generation", zap.Error(err))
-		return authModel.Tokens{}, fmt.Errorf("failed hash generation: %v", err)
+		return "", "", fmt.Errorf("failed hash generation: %v", err)
 	}
 
-	accessTokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewClaims(user.UserId)).
-		SignedString([]byte(s.cfg.Secret))
+	refreshTokenHash := sha256.Sum256([]byte(refreshToken))
+
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewAccessClaims(user.UserId)).SignedString([]byte(s.cfg.Secret))
 	if err != nil {
 		s.logger.Error("failed signed token", zap.Error(err))
-		return authModel.Tokens{}, fmt.Errorf("failed signed token: %v", err)
+		return "", "", fmt.Errorf("failed signed token: %v", err)
 	}
 
 	var tokens authModel.Tokens
-	tokens.AccessToken = accessTokenString
-	tokens.RefreshToken = string(refreshTokenString)
+	tokens.AccessToken = accessToken
+	tokens.RefreshToken = hex.EncodeToString(refreshTokenHash[:])
 	tokens.ExpiresAt = time.Now().AddDate(0, 1, 0)
 	tokens.UserId = user.UserId
+
+	s.logger.Info("create model of tokens", zap.String("refresh token", tokens.RefreshToken), zap.String("access token", tokens.AccessToken))
 
 	err = s.repo.CreateRefreshToken(ctx, tokens)
 	if err != nil {
 		s.logger.Error("failed create refresh token", zap.Error(err))
-		return authModel.Tokens{}, fmt.Errorf("failed create refresh token: %v", err)
+		return "", "", fmt.Errorf("failed create refresh token: %v", err)
 	}
 
 	s.logger.Info("success login", zap.String("email", user.Email))
-	return tokens, nil
+	return refreshToken, accessToken, nil
 }
 
-func (s *Service) Logout(ctx context.Context, accessToken string) error {
+func (s *Service) Logout(ctx context.Context, refreshToken string) error {
 	token, err := jwt.ParseWithClaims(
-		accessToken,
+		refreshToken,
 		&authModel.Claims{},
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(s.cfg.Secret), nil
@@ -173,6 +178,8 @@ func (s *Service) Logout(ctx context.Context, accessToken string) error {
 	s.logger.Info("success logout user", zap.String("user_id", claims.UserId.String()))
 	return nil
 }
+
+
 
 func (s *Service) ConfirmEmail(ctx context.Context, token string) error {
 	userId, err := s.repo.ConsumeToken(ctx, token)
@@ -200,9 +207,9 @@ func (s *Service) ConfirmEmail(ctx context.Context, token string) error {
 	return nil
 }
 
-func (s *Service) Refresh(ctx context.Context, accessToken, refreshToken string) (string, error) {
+func (s *Service) Refresh(ctx context.Context, refreshToken string) (string, error) {
 	token, err := jwt.ParseWithClaims(
-		accessToken,
+		refreshToken,
 		&authModel.Claims{},
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(s.cfg.Secret), nil
@@ -223,7 +230,9 @@ func (s *Service) Refresh(ctx context.Context, accessToken, refreshToken string)
 		return "", err
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(refreshTokenInDB.RefreshToken), []byte(refreshToken)); err != nil {
+	refreshTokenHash := sha256.Sum256([]byte(refreshToken))
+
+	if hex.EncodeToString(refreshTokenHash[:]) != refreshTokenInDB.RefreshToken {
 		s.logger.Error("invalid refresh token", zap.Error(err))
 		return "", err
 	}
@@ -233,8 +242,7 @@ func (s *Service) Refresh(ctx context.Context, accessToken, refreshToken string)
 		return "", nil
 	}
 
-	newAccessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewClaims(claims.UserId)).
-		SignedString([]byte(s.cfg.Secret))
+	newAccessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, authModel.NewAccessClaims(claims.UserId)).SignedString([]byte(s.cfg.Secret))
 	if err != nil {
 		s.logger.Error("failed signed token", zap.String("user_id", claims.UserId.String()), zap.Error(err))
 		return "", fmt.Errorf("failed signed token: %v", err)

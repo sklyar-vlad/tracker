@@ -36,6 +36,7 @@ func (r *repository) CreateRefreshToken(ctx context.Context, tokens model.Tokens
 	VAlUES ($1, $2, $3)	
 	`
 
+	r.logger.Info("get tokens", zap.String("refresh token", tokens.RefreshToken))
 	_, err := r.pool.Exec(ctx, query, tokens.RefreshToken, tokens.UserId, tokens.ExpiresAt)
 	if err != nil {
 		r.logger.Error("failed insert refresh token in database", zap.Error(err))
@@ -71,15 +72,14 @@ func (r *repository) GetRefreshToken(ctx context.Context, userId uuid.UUID) (mod
 		return model.Tokens{}, err
 	}
 
-	r.logger.Info("success select token by user_id", zap.String("user_id", refreshToken.UserId.String()))
+	r.logger.Info("success select token by user_id", zap.String("refresh token", refreshToken.RefreshToken))
 
 	return refreshToken, nil
 }
 
 func (r *repository) DeleteRefreshToken(ctx context.Context, userId uuid.UUID) error {
 	query := `
-	DELETE *
-	FROM refresh_tokens
+	DELETE FROM refresh_tokens
 	WHERE user_id = $1`
 
 	_, err := r.pool.Exec(ctx, query, userId)

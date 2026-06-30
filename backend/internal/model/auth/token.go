@@ -20,11 +20,23 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewClaims(userId uuid.UUID) Claims {
+func NewAccessClaims(userId uuid.UUID) Claims {
 	claims := Claims{
 		UserId: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(0, 0, 1)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	return claims
+}
+
+func NewRefreshClaims(userId uuid.UUID) Claims {
+	claims := Claims{
+		UserId: userId,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(0, 1, 0)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

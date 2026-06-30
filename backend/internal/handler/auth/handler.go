@@ -10,15 +10,14 @@ import (
 
 	appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/handler/auth/dto"
-	model "github.com/sklyar-vlad/selfDev/internal/model/auth"
 )
 
 type AuthService interface {
 	Register(ctx context.Context, username, email, password string) error
-	Login(ctx context.Context, username, email, password string) (model.Tokens, error)
-	Logout(ctx context.Context, accessToken string) error
+	Login(ctx context.Context, username, email, password string) (string, string, error)
+	Logout(ctx context.Context, refreshToken string) error
 	ConfirmEmail(ctx context.Context, token string) error
-	Refresh(ctx context.Context, accessToken, refreshToken string) (string, error)
+	Refresh(ctx context.Context, refreshToken string) (string, error)
 }
 
 type handler struct {
@@ -79,7 +78,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
+	refreshToken, accessToken, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
 	if err != nil {
 		h.logger.Error("failed login", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,7 +87,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
-		Value:    tokens.AccessToken,
+		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -98,7 +97,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
-		Value:    tokens.RefreshToken,
+		Value:    refreshToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -119,10 +118,10 @@ func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.Logout(r.Context(), input.AccessToken)
+	err := h.service.Logout(r.Context(), input.RefreshToken)
 	if err != nil {
 		h.logger.Error("failed delete refresh token", zap.Error(err))
-		http.Error(w, "failed delete refresh token: %v", http.StatusInternalServerError)
+		http.Error(w, "failed delete refresh token", http.StatusInternalServerError)
 		return
 	}
 
@@ -139,10 +138,10 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := h.service.Refresh(r.Context(), input.AccessToken, input.RefreshToken)
+	accessToken, err := h.service.Refresh(r.Context(), input.RefreshToken)
 	if err != nil {
 		h.logger.Error("failed refresh access token", zap.Error(err))
-		http.Error(w, "failed refresh access token: %v", http.StatusInternalServerError)
+		http.Error(w, "failed refresh access token", http.StatusInternalServerError)
 	}
 
 	http.SetCookie(w, &http.Cookie{
