@@ -59,8 +59,6 @@ func (s *Service) CreateUser(ctx context.Context, username, email, password stri
 }
 
 func (s *Service) UpdateUser(ctx context.Context, user model.User) error {
-	
-
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}

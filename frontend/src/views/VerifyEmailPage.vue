@@ -5,7 +5,6 @@
 
   <div class="auth-container">
     <div class="auth-card">
-
       <!-- LOADING -->
       <div v-if="loading" class="auth-header">
         <h1>Verifying Email</h1>
@@ -16,37 +15,25 @@
 
       <!-- SUCCESS -->
       <div v-else-if="success" class="auth-header">
-        <div class="status-icon success">
-          ✓
-        </div>
+        <div class="status-icon success">✓</div>
 
         <h1>Email Verified</h1>
 
-        <p>
-          Your email has been successfully verified.
-          You can now sign in.
-        </p>
+        <p>Your email has been successfully verified. You can now sign in.</p>
 
-        <RouterLink to="/login" class="btn btn-primary btn-full">
-          Go to Login
-        </RouterLink>
+        <RouterLink to="/login" class="btn btn-primary btn-full"> Go to Login </RouterLink>
       </div>
 
       <!-- ERROR -->
       <div v-else class="auth-header">
-        <div class="status-icon error">
-          ✕
-        </div>
+        <div class="status-icon error">✕</div>
 
         <h1>Verification Failed</h1>
 
         <p>{{ error }}</p>
 
-        <RouterLink to="/login" class="btn btn-secondary btn-full">
-          Back to Login
-        </RouterLink>
+        <RouterLink to="/login" class="btn btn-secondary btn-full"> Back to Login </RouterLink>
       </div>
-
     </div>
   </div>
 </template>
@@ -72,12 +59,9 @@ onMounted(async () => {
   }
 
   try {
-    const res = await fetch(
-      `/api/verify/${encodeURIComponent(token)}`,
-      {
-        method: 'POST',
-      }
-    )
+    const res = await fetch(`/api/verify/${encodeURIComponent(token)}`, {
+      method: 'POST',
+    })
 
     if (!res.ok) {
       const text = await res.text()
@@ -86,10 +70,7 @@ onMounted(async () => {
 
     success.value = true
   } catch (e) {
-    error.value =
-      e instanceof Error
-        ? e.message
-        : 'Verification failed.'
+    error.value = e instanceof Error ? e.message : 'Verification failed.'
   } finally {
     loading.value = false
   }
@@ -147,12 +128,12 @@ onMounted(async () => {
 }
 
 .success {
-  background: rgba(34,197,94,.12);
+  background: rgba(34, 197, 94, 0.12);
   color: #22c55e;
 }
 
 .error {
-  background: rgba(239,68,68,.12);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
 }
 
@@ -160,10 +141,10 @@ onMounted(async () => {
   width: 46px;
   height: 46px;
   margin: 12px auto 0;
-  border: 4px solid rgba(149,162,223,.2);
+  border: 4px solid rgba(149, 162, 223, 0.2);
   border-top-color: var(--accent-primary);
   border-radius: 50%;
-  animation: spin .8s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -181,7 +162,7 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: .25s ease;
+  transition: 0.25s ease;
 }
 
 .btn-primary {

@@ -76,7 +76,6 @@ func (r *repository) Update(ctx context.Context, user model.User) error {
 		user.EmailVerified,
 		user.Password,
 	)
-
 	if err != nil {
 		r.logger.Error("failed update user in database", zap.Error(err))
 		return fmt.Errorf("failed update user in database: %v", err)
@@ -166,34 +165,3 @@ func mapDBError(err error) error {
 
 	return fmt.Errorf("database error: %w", err)
 }
-
-// func (r *repository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
-// 	query := `
-// 	SELECT user_id, role, username, email, password
-// 	FROM users
-// 	WHERE email = $1
-// 	`
-
-// 	var user model.User
-
-// 	err := r.pool.QueryRow(ctx, query, email).Scan(
-// 		&user.UserId,
-// 		&user.Role,
-// 		&user.Username,
-// 		&user.Email,
-// 		&user.Password,
-// 	)
-
-// 	if errors.Is(err, pgx.ErrNoRows) {
-// 		r.logger.Error("user not found", zap.Error(customErrors.ErrUserNotFound))
-// 		return model.User{}, customErrors.ErrUserNotFound
-// 	}
-
-// 	if err != nil {
-// 		r.logger.Error("failed get user by email", zap.Error(err))
-// 		return model.User{}, err
-// 	}
-
-// 	r.logger.Info("success select user by email", zap.String("email", user.Email))
-// 	return user, nil
-// }

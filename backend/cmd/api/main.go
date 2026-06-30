@@ -68,14 +68,14 @@ func main() {
 
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux, userHandler, authHandler)
-	wrapped := middleware.CORS(mux)
+	wrapped := middleware.CORS(mux, cfg.Server.Middleware)
 
 	service := &http.Server{
 		Addr:         ":8080",
 		Handler:      wrapped,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
 	go func() {

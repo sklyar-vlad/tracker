@@ -10,15 +10,14 @@ import (
 
 	appErrors "github.com/sklyar-vlad/selfDev/internal/errors"
 	"github.com/sklyar-vlad/selfDev/internal/handler/auth/dto"
-	model "github.com/sklyar-vlad/selfDev/internal/model/auth"
 )
 
 type AuthService interface {
 	Register(ctx context.Context, username, email, password string) error
-	Login(ctx context.Context, username, email, password string) (model.Tokens, error)
+	Login(ctx context.Context, username, email, password string) (string, string, error)
+	Logout(ctx context.Context, refreshToken string) error
 	ConfirmEmail(ctx context.Context, token string) error
-	// Logout(ctx context.Context, refreshToken string) error
-	// Refresh(ctx context.Context, accessToken, refreshToken string) (string, error)
+	Refresh(ctx context.Context, refreshToken string) (string, error)
 }
 
 type handler struct {
@@ -39,7 +38,6 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	if err := h.service.Register(r.Context(), input.Username, input.Email, input.Password); err != nil {
 		h.logger.Error("failed create user", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,7 +78,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
+	refreshToken, accessToken, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
 	if err != nil {
 		h.logger.Error("failed login", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,7 +87,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
-		Value:    tokens.AccessToken,
+		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -99,7 +97,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
-		Value:    tokens.RefreshToken,
+		Value:    refreshToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -111,100 +109,51 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
-// 	var input dto.LoginRequest
+func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
+	var input dto.TokenRequest
 
-// 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-// 		h.logger.Error("failed decode request", zap.Error(err))
-// 		http.Error(w, "invalid json", http.StatusBadRequest)
-// 	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		h.logger.Error("failed decode request", zap.Error(err))
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
 
-// 	user, err := h.service.GetByLogin(r.Context(), input.Username, input.Email)
-// 	if err != nil {
-// 		h.logger.Error("failed get user", zap.Error(err))
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	}
+	err := h.service.Logout(r.Context(), input.RefreshToken)
+	if err != nil {
+		h.logger.Error("failed delete refresh token", zap.Error(err))
+		http.Error(w, "failed delete refresh token", http.StatusInternalServerError)
+		return
+	}
 
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
+}
 
-// 	if err = json.NewEncoder(w).Encode(dto.ToUserResponse(user)); err != nil {
-// 		h.logger.Error("failed create response with user", zap.String("email", user.Email), zap.Error(err))
-// 	}
-// }
+func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var input dto.TokenRequest
 
-// func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
-// 	var input dto.UserRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		h.logger.Error("failed decode request", zap.Error(err))
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
 
-// 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-// 		h.logger.Error("decode request failed", zap.Error(err))
-// 		http.Error(w, "invalid json", http.StatusBadRequest)
-// 		return
-// 	}
+	accessToken, err := h.service.Refresh(r.Context(), input.RefreshToken)
+	if err != nil {
+		h.logger.Error("failed refresh access token", zap.Error(err))
+		http.Error(w, "failed refresh access token", http.StatusInternalServerError)
+	}
 
-// 	if input.Email == "" {
-// 		h.logger.Error("invalid email address", zap.Error(errors.ErrInvalidEmail))
-// 		http.Error(w, errors.ErrInvalidEmail.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   12 * 60 * 60,
+	})
 
-// 	accessToken, refreshToken, err := h.service.Login(r.Context(), input.Username, input.Email, input.Password)
-// 	if err != nil {
-// 		h.logger.Error("failed authorization", zap.Error(err))
-// 		http.Error(w, err.Error(), http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:     "access_token",
-// 		Value:    accessToken,
-// 		Path:     "/",
-// 		HttpOnly: true,
-// 		Secure:   true,
-// 		SameSite: http.SameSiteStrictMode,
-// 		MaxAge:   12 * 60 * 60,
-// 	})
-
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:     "refresh_token",
-// 		Value:    refreshToken,
-// 		Path:     "/",
-// 		HttpOnly: true,
-// 		Secure:   true,
-// 		SameSite: http.SameSiteStrictMode,
-// 		MaxAge:   30 * 24 * 60 * 60,
-// 	})
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusCreated)
-// }
-
-// func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
-// 	var input dto.TokenRequest
-
-// 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-// 		h.logger.Error("decode request failed", zap.Error(err))
-// 		http.Error(w, "invalid json", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	h.logger.Info("access token", zap.String("access token", input.AccessToken))
-// 	accessToken, err := h.service.Refresh(r.Context(), input.AccessToken, input.RefreshToken)
-// 	if err != nil {
-// 		h.logger.Error("failed authorization", zap.Error(err))
-// 		http.Error(w, err.Error(), http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:     "access_token",
-// 		Value:    accessToken,
-// 		Path:     "/",
-// 		HttpOnly: true,
-// 		Secure:   true,
-// 		SameSite: http.SameSiteStrictMode,
-// 		MaxAge:   12 * 60 * 60,
-// 	})
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusCreated)
-// }
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
