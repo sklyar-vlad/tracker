@@ -18,4 +18,4 @@ jobs:
           script: |
             cd /home/deploy/apps/selfDev
             git pull
-            task up
+            task prod-up
